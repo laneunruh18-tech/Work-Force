@@ -719,3 +719,901 @@
       </div>
     </div>
   </div>
+  <script>
+    // ======================
+    // Storage
+    // ======================
+    const STORE = {
+      calls: "workforce_calls_company_v1",
+      theme: "workforce_theme_v1",
+      techs: "workforce_techs_v1"
+    };
+
+    function loadJSON(key, fallback){
+      try{
+        const v = localStorage.getItem(key);
+        if(!v) return fallback;
+        return JSON.parse(v);
+      }catch(e){
+        return fallback;
+      }
+    }
+    function saveJSON(key, val){
+      localStorage.setItem(key, JSON.stringify(val));
+    }
+
+    // ======================
+    // State
+    // ======================
+    let calls = loadJSON(STORE.calls, []);
+    let techs = loadJSON(STORE.techs, ["Lane", "Tech 2", "Tech 3"]);
+    let lastCreatedId = null;
+    let editingId = null;
+
+    // ======================
+    // Elements
+    // ======================
+    const themeBtn = document.getElementById("themeBtn");
+    const statsPill = document.getElementById("statsPill");
+    const countBadge = document.getElementById("countBadge");
+    const clearDoneBtn = document.getElementById("clearDoneBtn");
+
+    const custInput = document.getElementById("custInput");
+    const phoneInput = document.getElementById("phoneInput");
+    const addrInput = document.getElementById("addrInput");
+    const whenInput = document.getElementById("whenInput");
+    const prioInput = document.getElementById("prioInput");
+    const statusInput = document.getElementById("statusInput");
+    const techInput = document.getElementById("techInput");
+    const addTechBtn = document.getElementById("addTechBtn");
+    const notesInput = document.getElementById("notesInput");
+    const addBtn = document.getElementById("addBtn");
+    const listEl = document.getElementById("list");
+
+    const whenLabel = document.getElementById("whenLabel");
+    const quickChips = Array.from(document.querySelectorAll('.chip[data-quick]'));
+
+    const notifyBtn = document.getElementById("notifyBtn");
+    const focusAddBtn = document.getElementById("focusAddBtn");
+
+    // filters
+    const resetFiltersBtn = document.getElementById("resetFiltersBtn");
+    const searchInput = document.getElementById("searchInput");
+    const filterTech = document.getElementById("filterTech");
+    const filterStatus = document.getElementById("filterStatus");
+    const filterPriority = document.getElementById("filterPriority");
+    const filterDone = document.getElementById("filterDone");
+
+    // sheet
+    const overlay = document.getElementById("overlay");
+    const sheet = document.getElementById("sheet");
+    const closeSheetBtn = document.getElementById("closeSheetBtn");
+    const deleteBtn = document.getElementById("deleteBtn");
+    const saveBtn = document.getElementById("saveBtn");
+
+    const eCust = document.getElementById("eCust");
+    const ePhone = document.getElementById("ePhone");
+    const eAddr = document.getElementById("eAddr");
+    const eWhen = document.getElementById("eWhen");
+    const ePrio = document.getElementById("ePrio");
+    const eStatus = document.getElementById("eStatus");
+    const eTech = document.getElementById("eTech");
+    const eAddTechBtn = document.getElementById("eAddTechBtn");
+    const eNotes = document.getElementById("eNotes");
+    const eWhenLabel = document.getElementById("eWhenLabel");
+    const eQuickChips = Array.from(document.querySelectorAll('.chip[data-equick]'));
+
+    // ======================
+    // Themes
+    // ======================
+    const themes = ["light","dark","charcoal","ocean"];
+
+    function applyTheme(t){
+      document.documentElement.setAttribute("data-theme", t);
+      saveJSON(STORE.theme, t);
+    }
+    function loadTheme(){
+      const saved = loadJSON(STORE.theme, "light");
+      if(saved && themes.includes(saved)) applyTheme(saved);
+      else applyTheme("light");
+    }
+    function nextTheme(){
+      const cur = document.documentElement.getAttribute("data-theme") || "light";
+      const i = themes.indexOf(cur);
+      applyTheme(themes[(i + 1) % themes.length]);
+    }
+
+    // ======================
+    // Utilities
+    // ======================
+    function uid(){
+      return (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+    }
+
+    function escapeHtml(str){
+      return (str || "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function pad2(n){ return String(n).padStart(2,"0"); }
+    function toDatetimeLocalValue(d){
+      const yyyy = d.getFullYear();
+      const mm = pad2(d.getMonth() + 1);
+      const dd = pad2(d.getDate());
+      const hh = pad2(d.getHours());
+      const mi = pad2(d.getMinutes());
+      return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+    }
+
+    function isToday(d){
+      const now = new Date();
+      return d.getFullYear() === now.getFullYear() &&
+             d.getMonth() === now.getMonth() &&
+             d.getDate() === now.getDate();
+    }
+
+    function formatWhen(iso){
+      if(!iso) return "No time set";
+      const d = new Date(iso);
+      if(Number.isNaN(d.getTime())) return "Invalid time";
+      return d.toLocaleString([], { weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
+    }
+
+    function formatStatus(s){
+      const map = {
+        new: "New",
+        scheduled: "Scheduled",
+        enroute: "En Route",
+        onsite: "On Site",
+        completed: "Completed"
+      };
+      return map[s] || "New";
+    }
+
+    function cleanPhone(raw){
+      // Keep + and digits only for tel: links
+      const v = (raw || "").trim();
+      if(!v) return "";
+      let out = "";
+      for(const ch of v){
+        if((ch >= "0" && ch <= "9") || ch === "+") out += ch;
+      }
+      return out;
+    }
+
+    function updateStats(){
+      const open = calls.filter(c => !c.done).length;
+      const total = calls.length;
+      statsPill.textContent = `${open} open · ${total} total`;
+      countBadge.textContent = String(total);
+    }
+
+    // ======================
+    // Tech list
+    // ======================
+    function buildTechOptions(selectEl, includeUnassigned=true){
+      const cur = selectEl.value;
+      selectEl.innerHTML = "";
+      if(includeUnassigned){
+        const opt0 = document.createElement("option");
+        opt0.value = "";
+        opt0.textContent = "Unassigned";
+        selectEl.appendChild(opt0);
+      }
+      techs.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t;
+        opt.textContent = t;
+        selectEl.appendChild(opt);
+      });
+      // restore
+      if(cur != null) selectEl.value = cur;
+    }
+
+    function syncTechSelectors(){
+      // main composer
+      buildTechOptions(techInput, true);
+
+      // edit sheet
+      buildTechOptions(eTech, true);
+
+      // filter tech
+      const cur = filterTech.value;
+      filterTech.innerHTML = "";
+      const all = document.createElement("option");
+      all.value = "";
+      all.textContent = "All techs";
+      filterTech.appendChild(all);
+
+      const un = document.createElement("option");
+      un.value = "__unassigned__";
+      un.textContent = "Unassigned";
+      filterTech.appendChild(un);
+
+      techs.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t;
+        opt.textContent = t;
+        filterTech.appendChild(opt);
+      });
+      filterTech.value = cur || "";
+    }
+
+    function addTechFlow(){
+      const name = prompt("Add tech name");
+      if(name === null) return;
+      const cleaned = name.trim();
+      if(!cleaned) return;
+      if(techs.includes(cleaned)) return;
+
+      techs.push(cleaned);
+      saveJSON(STORE.techs, techs);
+      syncTechSelectors();
+
+      techInput.value = cleaned;
+    }
+
+    function addTechFlowEdit(){
+      const name = prompt("Add tech name");
+      if(name === null) return;
+      const cleaned = name.trim();
+      if(!cleaned) return;
+      if(techs.includes(cleaned)) return;
+
+      techs.push(cleaned);
+      saveJSON(STORE.techs, techs);
+      syncTechSelectors();
+
+      eTech.value = cleaned;
+    }
+
+    // ======================
+    // Quick time
+    // ======================
+    function clearChipSelection(){
+      quickChips.forEach(c => c.classList.remove("on"));
+    }
+
+    function setWhenLabelFromInput(){
+      const v = (whenInput.value || "").trim();
+      if(!v){ whenLabel.textContent = "No time set"; return; }
+      const d = new Date(v);
+      if(Number.isNaN(d.getTime())){ whenLabel.textContent = "Invalid time"; return; }
+      const prefix = isToday(d) ? "Today" : "Scheduled";
+      whenLabel.textContent = `${prefix}: ${d.toLocaleString([], { weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })}`;
+    }
+
+    function applyQuick(option){
+      clearChipSelection();
+      const chip = quickChips.find(c => c.dataset.quick === option);
+      if(chip) chip.classList.add("on");
+
+      if(option === "none"){
+        whenInput.value = "";
+        setWhenLabelFromInput();
+        return;
+      }
+
+      const now = new Date();
+      let d;
+
+      if(option === "1h"){
+        d = new Date(now.getTime() + 60*60*1000);
+      } else if(option === "6pm"){
+        d = new Date(now);
+        d.setHours(18, 0, 0, 0);
+        if(d.getTime() <= now.getTime()) d.setDate(d.getDate() + 1);
+      } else if(option === "tom9"){
+        d = new Date(now);
+        d.setDate(d.getDate() + 1);
+        d.setHours(9, 0, 0, 0);
+      } else {
+        return;
+      }
+
+      whenInput.value = toDatetimeLocalValue(d);
+      setWhenLabelFromInput();
+    }
+
+    // edit sheet quick time
+    function clearEditChipSelection(){
+      eQuickChips.forEach(c => c.classList.remove("on"));
+    }
+
+    function setEditWhenLabel(){
+      const v = (eWhen.value || "").trim();
+      if(!v){ eWhenLabel.textContent = "No time set"; return; }
+      const d = new Date(v);
+      if(Number.isNaN(d.getTime())){ eWhenLabel.textContent = "Invalid time"; return; }
+      const prefix = isToday(d) ? "Today" : "Scheduled";
+      eWhenLabel.textContent = `${prefix}: ${d.toLocaleString([], { weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })}`;
+    }
+
+    function applyEditQuick(option){
+      clearEditChipSelection();
+      const chip = eQuickChips.find(c => c.dataset.equick === option);
+      if(chip) chip.classList.add("on");
+
+      if(option === "none"){
+        eWhen.value = "";
+        setEditWhenLabel();
+        return;
+      }
+
+      const now = new Date();
+      let d;
+
+      if(option === "1h"){
+        d = new Date(now.getTime() + 60*60*1000);
+      } else if(option === "6pm"){
+        d = new Date(now);
+        d.setHours(18, 0, 0, 0);
+        if(d.getTime() <= now.getTime()) d.setDate(d.getDate() + 1);
+      } else if(option === "tom9"){
+        d = new Date(now);
+        d.setDate(d.getDate() + 1);
+        d.setHours(9, 0, 0, 0);
+      } else {
+        return;
+      }
+
+      eWhen.value = toDatetimeLocalValue(d);
+      setEditWhenLabel();
+    }
+
+    // ======================
+    // Animations
+    // ======================
+    function animateRemoveById(id){
+      const wrap = listEl.querySelector(`[data-id="${CSS.escape(id)}"]`);
+      if(!wrap) return;
+      wrap.classList.add("fadeOut");
+      setTimeout(() => { try{ wrap.remove(); }catch(e){} }, 200);
+    }
+
+    // ======================
+    // Swipe
+    // ======================
+    function setupSwipe(rowFrontEl, onRight, onLeft){
+      let startX=0, startY=0, dx=0, dragging=false, locked=false;
+      const THRESH = 88;
+      const MAX = 140;
+
+      function setX(x){ rowFrontEl.style.transform = `translateX(${x}px)`; }
+
+      function onStart(e){
+        if(locked) return;
+        const pt = (e.touches && e.touches[0]) ? e.touches[0] : e;
+        startX = pt.clientX;
+        startY = pt.clientY;
+        dx = 0;
+        dragging = false;
+        rowFrontEl.classList.add("dragging");
+      }
+
+      function onMove(e){
+        if(locked) return;
+        const pt = (e.touches && e.touches[0]) ? e.touches[0] : e;
+        const mx = pt.clientX - startX;
+        const my = pt.clientY - startY;
+
+        if(!dragging){
+          if(Math.abs(my) > Math.abs(mx) && Math.abs(my) > 6){
+            rowFrontEl.classList.remove("dragging");
+            return;
+          }
+          if(Math.abs(mx) > 8){
+            dragging = true;
+          } else {
+            return;
+          }
+        }
+
+        e.preventDefault();
+        dx = Math.max(-MAX, Math.min(MAX, mx));
+        setX(dx);
+      }
+
+      function onEnd(){
+        rowFrontEl.classList.remove("dragging");
+
+        if(Math.abs(dx) < THRESH){
+          rowFrontEl.style.transition = "transform .18s ease";
+          setX(0);
+          rowFrontEl.style.transition = "";
+          dx = 0;
+          return;
+        }
+
+        locked = true;
+        rowFrontEl.style.transition = "transform .18s ease";
+
+        if(dx > 0){
+          setX(MAX);
+          setTimeout(() => { try{ onRight(); }catch(e){} locked=false; }, 120);
+        } else {
+          setX(-MAX);
+          setTimeout(() => { try{ onLeft(); }catch(e){} locked=false; }, 140);
+        }
+      }
+
+      rowFrontEl.addEventListener("touchstart", onStart, { passive:true });
+      rowFrontEl.addEventListener("touchmove", onMove, { passive:false });
+      rowFrontEl.addEventListener("touchend", onEnd, { passive:true });
+      rowFrontEl.addEventListener("touchcancel", onEnd, { passive:true });
+    }
+
+    // ======================
+    // CRUD
+    // ======================
+    function addCall(){
+      const customer = custInput.value.trim();
+      if(!customer){
+        alert("Customer / Company is required.");
+        return;
+      }
+
+      const phone = phoneInput.value.trim();
+      const address = addrInput.value.trim();
+      const when = (whenInput.value || "").trim();
+      const priority = prioInput.value;
+      let status = statusInput.value;
+      const tech = techInput.value;
+      const notes = notesInput.value.trim();
+
+      // If they pick "Completed" status, mark done true
+      let done = false;
+      if(status === "completed") done = true;
+
+      const item = {
+        id: uid(),
+        customer,
+        phone,
+        address,
+        when,
+        priority,
+        status,
+        tech,
+        notes,
+        done,
+        created: Date.now()
+      };
+
+      calls.unshift(item);
+      lastCreatedId = item.id;
+      saveJSON(STORE.calls, calls);
+
+      // reset inputs
+      custInput.value = "";
+      phoneInput.value = "";
+      addrInput.value = "";
+      whenInput.value = "";
+      prioInput.value = "medium";
+      statusInput.value = "new";
+      techInput.value = "";
+      notesInput.value = "";
+      clearChipSelection();
+      setWhenLabelFromInput();
+      custInput.focus();
+
+      render();
+      scheduleInAppNotification(item);
+    }
+
+    function toggleDone(id){
+      const c = calls.find(x => x.id === id);
+      if(!c) return;
+      c.done = !c.done;
+
+      // keep status in sync with done
+      if(c.done){
+        c.status = "completed";
+      } else {
+        if(c.status === "completed") c.status = "scheduled";
+      }
+
+      saveJSON(STORE.calls, calls);
+      render();
+    }
+
+    function deleteCall(id){
+      calls = calls.filter(x => x.id !== id);
+      saveJSON(STORE.calls, calls);
+      animateRemoveById(id);
+      setTimeout(render, 210);
+    }
+
+    function clearDone(){
+      const doneIds = calls.filter(c => c.done).map(c => c.id);
+      calls = calls.filter(c => !c.done);
+      saveJSON(STORE.calls, calls);
+      doneIds.forEach(id => animateRemoveById(id));
+      setTimeout(render, 220);
+    }
+
+    // ======================
+    // Edit sheet
+    // ======================
+    function openSheetFor(id){
+      const item = calls.find(c => c.id === id);
+      if(!item) return;
+
+      editingId = id;
+
+      eCust.value = item.customer || "";
+      ePhone.value = item.phone || "";
+      eAddr.value = item.address || "";
+      eWhen.value = item.when || "";
+      ePrio.value = item.priority || "medium";
+      eStatus.value = item.status || "new";
+      eTech.value = item.tech || "";
+      eNotes.value = item.notes || "";
+
+      clearEditChipSelection();
+      setEditWhenLabel();
+
+      overlay.classList.add("open");
+      sheet.classList.add("open");
+      setTimeout(() => eCust.focus(), 60);
+    }
+
+    function closeSheet(){
+      editingId = null;
+      overlay.classList.remove("open");
+      sheet.classList.remove("open");
+    }
+
+    function saveEdit(){
+      if(!editingId) return;
+      const item = calls.find(c => c.id === editingId);
+      if(!item) return;
+
+      const customer = eCust.value.trim();
+      if(!customer){
+        alert("Customer / Company is required.");
+        return;
+      }
+
+      item.customer = customer;
+      item.phone = ePhone.value.trim();
+      item.address = eAddr.value.trim();
+      item.when = (eWhen.value || "").trim();
+      item.priority = ePrio.value;
+      item.status = eStatus.value;
+      item.tech = eTech.value;
+      item.notes = eNotes.value.trim();
+
+      // status -> done sync
+      if(item.status === "completed") item.done = true;
+      else item.done = false;
+
+      saveJSON(STORE.calls, calls);
+      closeSheet();
+      render();
+    }
+
+    function deleteFromSheet(){
+      if(!editingId) return;
+      const id = editingId;
+      closeSheet();
+      deleteCall(id);
+    }
+
+    // ======================
+    // Notifications (in-app only)
+    // ======================
+    async function enableNotifications(){
+      if(!("Notification" in window)){
+        alert("Notifications aren’t supported here.");
+        return;
+      }
+      const perm = await Notification.requestPermission();
+      if(perm !== "granted"){
+        alert("Notifications not enabled.");
+        return;
+      }
+      alert("Notifications enabled ✅\n\nNote: these fire while the app is open. True push while closed is possible with more setup.");
+    }
+
+    function scheduleInAppNotification(call){
+      if(!call.when) return;
+      if(!("Notification" in window)) return;
+      if(Notification.permission !== "granted") return;
+
+      const ms = new Date(call.when).getTime() - Date.now();
+      if(!Number.isFinite(ms) || ms <= 0) return;
+
+      setTimeout(() => {
+        try{
+          new Notification("Work Force Service Call", {
+            body: `${call.customer} • ${formatStatus(call.status)}`
+          });
+        }catch(e){}
+      }, ms);
+    }
+
+    // ======================
+    // Filters
+    // ======================
+    function getFilteredCalls(){
+      const q = (searchInput.value || "").trim().toLowerCase();
+      const fTech = filterTech.value;
+      const fStatus = filterStatus.value;
+      const fPrio = filterPriority.value;
+      const fDone = filterDone.value;
+
+      return calls.filter(c => {
+        // done filter
+        if(fDone === "open" && c.done) return false;
+        if(fDone === "done" && !c.done) return false;
+
+        // tech filter
+        if(fTech){
+          if(fTech === "__unassigned__"){
+            if(c.tech) return false;
+          } else {
+            if(c.tech !== fTech) return false;
+          }
+        }
+
+        // status filter
+        if(fStatus && (c.status || "new") !== fStatus) return false;
+
+        // priority filter
+        if(fPrio && (c.priority || "medium") !== fPrio) return false;
+
+        // search filter
+        if(q){
+          const blob = [
+            c.customer, c.phone, c.address, c.notes, c.tech, c.status, c.priority
+          ].join(" ").toLowerCase();
+          if(!blob.includes(q)) return false;
+        }
+
+        return true;
+      });
+    }
+
+    function resetFilters(){
+      searchInput.value = "";
+      filterTech.value = "";
+      filterStatus.value = "";
+      filterPriority.value = "";
+      filterDone.value = "open";
+      render();
+    }
+
+    // ======================
+    // Desktop actions
+    // ======================
+    async function copyText(text){
+      const v = (text || "").trim();
+      if(!v) return;
+      try{
+        await navigator.clipboard.writeText(v);
+        alert("Copied ✅");
+      }catch(e){
+        // fallback
+        const ta = document.createElement("textarea");
+        ta.value = v;
+        document.body.appendChild(ta);
+        ta.select();
+        try{ document.execCommand("copy"); alert("Copied ✅"); }catch(err){}
+        ta.remove();
+      }
+    }
+
+    // ======================
+    // Render
+    // ======================
+    function render(){
+      listEl.innerHTML = "";
+
+      const filtered = getFilteredCalls();
+
+      if(filtered.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "swipeWrap";
+        empty.innerHTML = `
+          <div class="rowFront">
+            <div class="left">
+              <div class="textWrap">
+                <p class="task" style="color:var(--muted);">No calls match your filters.</p>
+                <p class="meta">Try Reset, or add a new service call.</p>
+              </div>
+            </div>
+          </div>
+        `;
+        listEl.appendChild(empty);
+        updateStats();
+        return;
+      }
+
+      // Sort: open first, then priority high->low, then time (if set), then newest
+      const prRank = { high:0, medium:1, low:2 };
+      const stRank = { new:0, scheduled:1, enroute:2, onsite:3, completed:4 };
+
+      const sorted = filtered.slice().sort((a,b) => {
+        if(a.done !== b.done) return a.done ? 1 : -1;
+
+        const pa = prRank[a.priority] ?? 1;
+        const pb = prRank[b.priority] ?? 1;
+        if(pa !== pb) return pa - pb;
+
+        const sa = stRank[a.status] ?? 0;
+        const sb = stRank[b.status] ?? 0;
+        if(sa !== sb) return sa - sb;
+
+        const ta = a.when ? new Date(a.when).getTime() : Infinity;
+        const tb = b.when ? new Date(b.when).getTime() : Infinity;
+        if(ta !== tb) return ta - tb;
+
+        return b.created - a.created;
+      });
+
+      sorted.forEach(call => {
+        const wrap = document.createElement("div");
+        wrap.className = "swipeWrap";
+        wrap.dataset.id = call.id;
+
+        const prio = (call.priority || "medium").toLowerCase();
+        const prioText = prio === "high" ? "High" : prio === "low" ? "Low" : "Medium";
+
+        const status = (call.status || "new");
+        const statusText = formatStatus(status);
+
+        const tech = (call.tech || "");
+
+        const metaParts = [];
+        if(call.address) metaParts.push(`<span>${escapeHtml(call.address)}</span>`);
+        metaParts.push(`<span>${escapeHtml(formatWhen(call.when))}</span>`);
+        metaParts.push(`<span class="pillMini ${prio}">${prioText} Priority</span>`);
+        metaParts.push(`<span class="pillMini status">${escapeHtml(statusText)}</span>`);
+        if(tech) metaParts.push(`<span class="pillMini tech">${escapeHtml(tech)}</span>`);
+        if(call.done) metaParts.push(`<span>Done</span>`);
+
+        const phoneClean = cleanPhone(call.phone);
+        const phoneDisplay = (call.phone || "").trim();
+
+        wrap.innerHTML = `
+          <div class="swipeBg bgDone"><div>Done</div><div></div></div>
+          <div class="swipeBg bgDel"><div>Delete</div></div>
+
+          <div class="rowFront ${call.id === lastCreatedId ? "animateIn" : ""}">
+            <div class="left">
+              <button class="check ${call.done ? "on" : ""}" aria-label="Toggle done" type="button">
+                ${call.done ? "✓" : ""}
+              </button>
+              <div class="textWrap">
+                <p class="task" style="${call.done ? "text-decoration:line-through; color:var(--muted);" : ""}">
+                  ${escapeHtml(call.customer)}
+                </p>
+                <p class="meta">${metaParts.join("")}</p>
+                ${phoneDisplay ? `<p class="meta" style="margin-top:6px;">📞 ${escapeHtml(phoneDisplay)}</p>` : ""}
+                ${call.notes ? `<p class="meta" style="margin-top:6px;">${escapeHtml(call.notes)}</p>` : ""}
+              </div>
+            </div>
+
+            <div class="actions">
+              ${phoneClean ? `<a class="iconBtn" href="tel:${phoneClean}" title="Call">Call</a>` : `<button class="iconBtn" type="button" title="No phone" disabled style="opacity:.5; cursor:not-allowed;">Call</button>`}
+              ${phoneDisplay ? `<button class="iconBtn" type="button" data-copy-phone="1" title="Copy phone">Copy</button>` : ""}
+              <button class="iconBtn" type="button" data-edit="1" title="Edit">Edit</button>
+              <button class="iconBtn danger" type="button" data-del="1" title="Delete">Del</button>
+            </div>
+          </div>
+        `;
+
+        const rowFront = wrap.querySelector(".rowFront");
+        const checkBtn = wrap.querySelector(".check");
+        const editBtn = wrap.querySelector('[data-edit="1"]');
+        const delBtn = wrap.querySelector('[data-del="1"]');
+        const copyBtn = wrap.querySelector('[data-copy-phone="1"]');
+
+        // tap row to edit (but ignore buttons/links)
+        rowFront.addEventListener("click", (e) => {
+          const t = e.target;
+          if(t === checkBtn) return;
+          if(t && (t.closest(".actions") || t.tagName === "A" || t.tagName === "BUTTON")) return;
+          openSheetFor(call.id);
+        });
+
+        checkBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleDone(call.id);
+        });
+
+        editBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openSheetFor(call.id);
+        });
+
+        delBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          deleteCall(call.id);
+        });
+
+        if(copyBtn){
+          copyBtn.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            await copyText(phoneDisplay);
+          });
+        }
+
+        // Mobile swipe gestures
+        setupSwipe(rowFront, () => toggleDone(call.id), () => deleteCall(call.id));
+
+        listEl.appendChild(wrap);
+      });
+
+      lastCreatedId = null;
+      updateStats();
+    }
+
+    // ======================
+    // Events
+    // ======================
+    themeBtn.addEventListener("click", nextTheme);
+    addBtn.addEventListener("click", addCall);
+    clearDoneBtn.addEventListener("click", clearDone);
+
+    custInput.addEventListener("keydown", (e) => {
+      if(e.key === "Enter") addCall();
+    });
+
+    whenInput.addEventListener("change", () => {
+      clearChipSelection();
+      setWhenLabelFromInput();
+    });
+
+    quickChips.forEach(chip => {
+      chip.addEventListener("click", () => applyQuick(chip.dataset.quick));
+    });
+
+    addTechBtn.addEventListener("click", addTechFlow);
+    eAddTechBtn.addEventListener("click", addTechFlowEdit);
+
+    notifyBtn.addEventListener("click", enableNotifications);
+
+    focusAddBtn.addEventListener("click", () => {
+      custInput.focus();
+      custInput.scrollIntoView({ behavior:"smooth", block:"center" });
+    });
+
+    // filter events
+    resetFiltersBtn.addEventListener("click", resetFilters);
+    [searchInput, filterTech, filterStatus, filterPriority, filterDone].forEach(el => {
+      el.addEventListener("input", render);
+      el.addEventListener("change", render);
+    });
+
+    // sheet events
+    overlay.addEventListener("click", closeSheet);
+    closeSheetBtn.addEventListener("click", closeSheet);
+    saveBtn.addEventListener("click", saveEdit);
+    deleteBtn.addEventListener("click", deleteFromSheet);
+
+    eWhen.addEventListener("change", () => {
+      clearEditChipSelection();
+      setEditWhenLabel();
+    });
+
+    eQuickChips.forEach(chip => {
+      chip.addEventListener("click", () => applyEditQuick(chip.dataset.equick));
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if(e.key === "Escape" && sheet.classList.contains("open")) closeSheet();
+    });
+
+    // ======================
+    // Boot
+    // ======================
+    loadTheme();
+    syncTechSelectors();
+    render();
+    setWhenLabelFromInput();
+  </script>
