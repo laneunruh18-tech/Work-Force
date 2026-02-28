@@ -403,3 +403,5 @@ textarea{ resize: vertical; min-height: 90px; }
   outline: 2px solid rgba(106,228,255,.35);
   box-shadow: 0 0 0 6px rgba(106,228,255,.08);
 }
+/* Auth overlay helper */
+#authOverlay .modal{ max-width: 520px; }
