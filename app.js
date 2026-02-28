@@ -222,6 +222,49 @@ function wireCardButtons() {
         if (!ok) return;
 
         state.calls = state.calls.filter(c => c.id !== id);
+        document.addEventListener("keydown", (e) => {
+  // ignore typing in fields
+  const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+  if (tag === "input" || tag === "textarea" || tag === "select") return;
+
+  if (e.key.toLowerCase() === "n") {
+    openModal("new");
+  }
+
+  if (e.key === "/") {
+    e.preventDefault();
+    el.search?.focus();
+  }
+
+  if (e.key.toLowerCase() === "e" && selectedId) {
+    const call = state.calls.find(c => c.id === selectedId);
+    if (call) openModal("edit", call);
+  }
+
+  if (e.key.toLowerCase() === "c" && selectedId) {
+    const call = state.calls.find(c => c.id === selectedId);
+    if (!call) return;
+    call.status = "done";
+    saveCalls();
+    render();
+    selectCard(selectedId);
+  }
+
+  if ((e.key === "Delete" || e.key === "Backspace") && selectedId) {
+    const call = state.calls.find(c => c.id === selectedId);
+    if (!call) return;
+    const ok = confirm(`Delete service call for "${call.name}"?`);
+    if (!ok) return;
+    state.calls = state.calls.filter(c => c.id !== selectedId);
+    saveCalls();
+    render();
+    selectedId = null;
+  }
+
+  if (e.key === "Escape") {
+    closeCtx();
+  }
+});
         saveCalls();
         render();
       });
