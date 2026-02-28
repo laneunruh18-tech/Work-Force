@@ -135,7 +135,135 @@ function render() {
   const hasAny = state.calls.length > 0;
   el.empty.style.display = hasAny ? "none" : "block";
 
-  wireCardButtons();
+ let selectedId = null;
+let ctxTargetId = null;
+
+const ctx = document.getElementById("ctx");
+const ctxMenu = document.getElementById("ctxMenu");
+
+function closeCtx(){
+  ctx.classList.add("hidden");
+  ctx.setAttribute("aria-hidden","true");
+  ctxTargetId = null;
+}
+function openCtx(x,y,id){
+  ctxTargetId = id;
+  ctx.classList.remove("hidden");
+  ctx.setAttribute("aria-hidden","false");
+  ctxMenu.style.left = `${x}px`;
+  ctxMenu.style.top = `${y}px`;
+}
+
+function selectCard(id){
+  selectedId = id;
+  document.querySelectorAll(".card").forEach(c => c.classList.remove("selected"));
+  const card = document.querySelector(`.card[data-id="${id}"]`);
+  if(card) card.classList.add("selected");
+}
+
+function wireCardButtons() {
+  // Call button
+  el.cards.querySelectorAll(".btn-call").forEach(btn => {
+    if (btn.disabled) return;
+    btn.addEventListener("click", () => {
+      const tel = btn.getAttribute("data-tel");
+      if (tel) window.location.href = tel;
+    });
+  });
+
+  // Status dropdown
+  el.cards.querySelectorAll(".status-select").forEach(sel => {
+    sel.addEventListener("change", () => {
+      const id = sel.getAttribute("data-id");
+      const idx = state.calls.findIndex(c => c.id === id);
+      if (idx === -1) return;
+      state.calls[idx].status = sel.value;
+      saveCalls();
+      render();
+      selectCard(id);
+    });
+  });
+
+  // Edit / Delete per card
+  el.cards.querySelectorAll(".card").forEach(card => {
+    const id = card.getAttribute("data-id");
+
+    // click selects card (Windows-style)
+    card.addEventListener("click", (e) => {
+      // don't steal focus when clicking buttons/selects
+      if (e.target.closest("button") || e.target.closest("select")) return;
+      selectCard(id);
+    });
+
+    // right-click context menu
+    card.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      selectCard(id);
+      openCtx(e.clientX, e.clientY, id);
+    });
+
+    const btnEdit = card.querySelector(".btn-edit");
+    const btnDelete = card.querySelector(".btn-delete");
+
+    if (btnEdit) {
+      btnEdit.addEventListener("click", () => {
+        const call = state.calls.find(c => c.id === id);
+        if (!call) return;
+        selectCard(id);
+        openModal("edit", call);
+      });
+    }
+
+    if (btnDelete) {
+      btnDelete.addEventListener("click", () => {
+        const call = state.calls.find(c => c.id === id);
+        if (!call) return;
+        const ok = confirm(`Delete service call for "${call.name}"?`);
+        if (!ok) return;
+
+        state.calls = state.calls.filter(c => c.id !== id);
+        saveCalls();
+        render();
+      });
+    }
+  });
+}
+
+/* context menu clicks */
+ctx?.addEventListener("click", (e)=> {
+  if(e.target === ctx) closeCtx();
+});
+
+document.querySelectorAll(".ctx-item").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const action = btn.getAttribute("data-action");
+    const id = ctxTargetId;
+    if(!id) return closeCtx();
+
+    const call = state.calls.find(c=>c.id===id);
+    if(!call) return closeCtx();
+
+    if(action==="call" && call.phone){
+      window.location.href = "tel:" + call.phone.replace(/\s+/g,"");
+    }
+    if(action==="edit"){
+      openModal("edit", call);
+    }
+    if(action==="complete"){
+      call.status="done";
+      saveCalls();
+      render();
+    }
+    if(action==="delete"){
+      const ok = confirm(`Delete service call for "${call.name}"?`);
+      if(ok){
+        state.calls = state.calls.filter(c=>c.id!==id);
+        saveCalls();
+        render();
+      }
+    }
+    closeCtx();
+  }); 
 }
 
 function cardHTML(call) {
