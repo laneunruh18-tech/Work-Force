@@ -29,12 +29,20 @@
       <section class="panel">
         <div class="panel-head">
           <h2>Active Calls</h2>
-          <div class="chips" role="tablist" aria-label="Filter by status">
-            <button class="chip active" data-filter="all" type="button">All</button>
-            <button class="chip" data-filter="new" type="button">New</button>
-            <button class="chip" data-filter="scheduled" type="button">Scheduled</button>
-            <button class="chip" data-filter="in_progress" type="button">In Progress</button>
-            <button class="chip" data-filter="done" type="button">Completed</button>
+
+          <div class="panel-tools">
+            <div class="search">
+              <span class="search-icon">⌕</span>
+              <input id="searchInput" type="search" placeholder="Search name, phone, address, notes..." />
+            </div>
+
+            <div class="chips" role="tablist" aria-label="Filter by status">
+              <button class="chip active" data-filter="all" type="button">All</button>
+              <button class="chip" data-filter="new" type="button">New</button>
+              <button class="chip" data-filter="scheduled" type="button">Scheduled</button>
+              <button class="chip" data-filter="in_progress" type="button">In Progress</button>
+              <button class="chip" data-filter="done" type="button">Completed</button>
+            </div>
           </div>
         </div>
 
@@ -102,8 +110,11 @@
 
           <div class="form-actions">
             <button class="btn ghost" id="btnCancel" type="button">Cancel</button>
-            <button class="btn primary" type="submit">Save Call</button>
+            <button class="btn primary" id="btnSave" type="submit">Save Call</button>
           </div>
+
+          <!-- hidden edit id -->
+          <input id="editId" type="hidden" value="" />
         </form>
       </div>
     </div>
@@ -111,7 +122,6 @@
 
   <script src="app.js"></script>
   <script>
-    // Register SW (safe even if missing; errors won’t break the app)
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
     }
