@@ -326,3 +326,18 @@ textarea{ resize: vertical; min-height: 90px; }
 @media (max-width: 640px){
   .grid{ grid-template-columns: 1fr; }
 }
+/* PC selection + context feel */
+.card{
+  cursor: default;
+  user-select: none;
+}
+.card.selected{
+  outline: 2px solid rgba(106,228,255,.35);
+  box-shadow: 0 0 0 6px rgba(106,228,255,.08), 0 10px 22px rgba(0,0,0,.25);
+}
+
+.kbd-hint{
+  color: var(--muted);
+  font-size: 12px;
+  margin-left: 10px;
+}
