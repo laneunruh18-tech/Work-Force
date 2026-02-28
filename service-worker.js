@@ -1,4 +1,4 @@
-const CACHE_NAME = "workforce-cache-v5";
+const CACHE_NAME = "workforce-cache-v4";
 
 const ASSETS = [
   "./",
