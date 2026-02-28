@@ -23,6 +23,7 @@
       </div>
 
       <div class="top-actions">
+        <button id="btnLogout" class="btn ghost" type="button">Log out</button>
         <button id="btnNew" class="btn primary" type="button">+ New Service Call</button>
       </div>
     </header>
@@ -74,6 +75,38 @@
       </section>
     </main>
 
+    <!-- Login Overlay -->
+    <div id="authOverlay" class="overlay hidden" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+        <div class="modal-head">
+          <h3 id="authTitle">Sign in to Work Force</h3>
+          <span style="color:var(--muted); font-size:12px;">Syncs across computers</span>
+        </div>
+
+        <form id="authForm" class="form">
+          <div class="grid">
+            <label class="field full">
+              <span>Email</span>
+              <input id="authEmail" type="email" autocomplete="email" placeholder="you@company.com" required />
+            </label>
+
+            <label class="field full">
+              <span>Password</span>
+              <input id="authPassword" type="password" autocomplete="current-password" placeholder="••••••••" required />
+            </label>
+          </div>
+
+          <div class="form-actions" style="justify-content:space-between; flex-wrap:wrap;">
+            <button id="btnCreateAccount" class="btn ghost" type="button">Create account</button>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <span id="authMsg" style="color:var(--muted); font-size:12px;"></span>
+              <button class="btn primary" type="submit">Sign in</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Modal (New/Edit Call) -->
     <div id="modalOverlay" class="overlay hidden" aria-hidden="true">
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -118,7 +151,7 @@
               </select>
             </label>
 
-            <!-- NEW: scheduled date/time -->
+            <!-- Scheduled date/time -->
             <label class="field full">
               <span>Scheduled For</span>
               <input id="scheduledAt" type="datetime-local" />
@@ -163,9 +196,11 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <!-- IMPORTANT: module script so app.js can import firebase.js -->
+  <script type="module" src="app.js"></script>
+
   <script>
-    // Register SW (safe even if missing; errors won’t break the app)
+    // Optional SW registration (safe even if missing; errors won't break the app)
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
     }
