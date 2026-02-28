@@ -3,25 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <title>Work Force</title>
-
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#000000" />
 
-  <!-- iOS standalone mode -->
+  <!-- iOS standalone -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Work Force" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
-  <!-- iOS icon -->
   <link rel="apple-touch-icon" href="/icon-192.png" />
 
   <style>
     :root{
       --danger:#ff3b30;
       --ok:#34c759;
+      --warn:#ffcc00;
+      --info:#0a84ff;
       --shadow:0 10px 30px rgba(0,0,0,.08);
       --radius:18px;
       --sheetShadow:0 30px 80px rgba(0,0,0,.25);
@@ -127,11 +126,11 @@
       color:var(--text);
       -webkit-font-smoothing:antialiased;
       -webkit-text-size-adjust:100%;
-      overscroll-behavior-y: none;
+      overscroll-behavior-y:none;
     }
 
     .app{
-      max-width:820px;
+      max-width:980px;
       margin:0 auto;
       padding:18px 16px 122px;
     }
@@ -183,7 +182,6 @@
       white-space:nowrap;
     }
     .btn:active{ transform:scale(.99); }
-
     .btn.secondary{
       background:transparent;
       color:var(--text);
@@ -293,6 +291,15 @@
       padding:10px 14px 0;
     }
 
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:14px;
+    }
+    @media (min-width: 980px){
+      .grid{ grid-template-columns: 1.35fr .65fr; }
+    }
+
     /* LIST + SWIPE */
     .list{ }
 
@@ -394,7 +401,41 @@
     .pillMini.medium{ background:var(--prioMedBg); color:var(--prioMedText); border-color:transparent; }
     .pillMini.high{ background:var(--prioHighBg); color:var(--prioHighText); border-color:transparent; }
 
-    /* Animations */
+    .pillMini.status{
+      background:rgba(10,132,255,.14);
+      color:rgba(10,132,255,.95);
+      border-color:transparent;
+    }
+
+    .pillMini.tech{
+      background:rgba(127,127,127,.14);
+      color:var(--muted);
+      border-color:transparent;
+    }
+
+    .actions{
+      display:flex;
+      gap:8px;
+      flex:0 0 auto;
+      align-items:center;
+    }
+
+    .iconBtn{
+      border:1px solid var(--line);
+      background:transparent;
+      color:var(--text);
+      border-radius:12px;
+      padding:9px 10px;
+      cursor:pointer;
+      font-weight:1000;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .iconBtn.danger{
+      color:var(--danger);
+      border-color:rgba(255,59,48,.25);
+    }
+
     @keyframes popIn{
       from{ opacity:0; transform:translateY(10px); }
       to{ opacity:1; transform:translateY(0); }
@@ -407,6 +448,18 @@
       transition: opacity .18s ease, transform .18s ease;
     }
 
+    /* Filters */
+    .filters{
+      padding:12px 14px;
+      border-top:1px solid var(--line);
+      display:grid;
+      gap:10px;
+    }
+    .filters .row > *{ flex: 1 1 160px; }
+    .search{
+      flex: 2 1 240px !important;
+    }
+
     /* Dock */
     .dock{
       position:fixed;
@@ -417,14 +470,14 @@
       backdrop-filter:saturate(180%) blur(18px);
     }
     .dockInner{
-      max-width:820px;
+      max-width:980px;
       margin:0 auto;
       display:flex;
       gap:10px;
     }
     .dockInner .btn{ flex:1; }
 
-    /* EDIT SHEET */
+    /* Edit sheet */
     .overlay{
       position:fixed;
       inset:0;
@@ -445,7 +498,7 @@
     .sheet.open{ transform:translateY(0); }
 
     .sheetCard{
-      max-width:820px;
+      max-width:980px;
       margin:0 auto;
       background:var(--card);
       border:1px solid var(--line);
@@ -453,7 +506,6 @@
       box-shadow:var(--sheetShadow);
       overflow:hidden;
     }
-
     .sheetTop{
       padding:12px 14px;
       display:flex;
@@ -463,9 +515,7 @@
       border-bottom:1px solid var(--line);
     }
     .sheetTitle{ font-weight:1000; letter-spacing:-0.01em; }
-
     .sheetBody{ padding:14px; display:grid; gap:10px; }
-
     .sheetActions{
       padding:12px 14px;
       border-top:1px solid var(--line);
@@ -478,11 +528,6 @@
       color:var(--danger) !important;
       background:transparent !important;
     }
-
-    @media (max-width:420px){
-      h1{ font-size:26px; }
-      .whenLabel{ white-space:normal; }
-    }
   </style>
 </head>
 
@@ -491,7 +536,7 @@
     <header>
       <div class="title">
         <h1>Work Force</h1>
-        <p class="sub">Schedule service calls. Set priority. Stay on top of it.</p>
+        <p class="sub">Company scheduling for service calls (priority • status • tech • click-to-call).</p>
       </div>
 
       <div class="row" style="justify-content:flex-end;">
@@ -500,50 +545,115 @@
       </div>
     </header>
 
-    <div class="card">
-      <div class="sectionHead">
-        <div class="sectionTitle">Service Calls <span class="badge" id="countBadge">0</span></div>
-        <button class="btn secondary" id="clearDoneBtn" type="button">Clear Done</button>
+    <div class="grid">
+      <!-- LEFT: Calls -->
+      <div class="card">
+        <div class="sectionHead">
+          <div class="sectionTitle">Service Calls <span class="badge" id="countBadge">0</span></div>
+          <button class="btn secondary" id="clearDoneBtn" type="button">Clear Done</button>
+        </div>
+
+        <div class="composer">
+          <div class="row">
+            <input id="custInput" type="text" placeholder="Customer / Company" autocomplete="off" />
+            <input id="phoneInput" type="text" placeholder="Phone (optional)" inputmode="tel" />
+          </div>
+
+          <div class="row">
+            <input id="addrInput" type="text" placeholder="Address / Location" />
+          </div>
+
+          <div class="row">
+            <input id="whenInput" type="datetime-local" />
+            <select id="prioInput" aria-label="Priority">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+            <select id="statusInput" aria-label="Status">
+              <option value="new" selected>New</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="enroute">En Route</option>
+              <option value="onsite">On Site</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <select id="techInput" aria-label="Assigned Tech">
+              <option value="" selected>Unassigned</option>
+              <option value="Lane">Lane</option>
+              <option value="Tech 2">Tech 2</option>
+              <option value="Tech 3">Tech 3</option>
+            </select>
+            <button class="btn secondary" id="addTechBtn" type="button">Add Tech…</button>
+          </div>
+
+          <div class="row" style="gap:8px;">
+            <button class="chip" type="button" data-quick="none">No time</button>
+            <button class="chip" type="button" data-quick="1h">In 1 hour</button>
+            <button class="chip" type="button" data-quick="6pm">Today 6pm</button>
+            <button class="chip" type="button" data-quick="tom9">Tomorrow 9am</button>
+            <span class="whenLabel" id="whenLabel">No time set</span>
+          </div>
+
+          <div class="row">
+            <textarea id="notesInput" placeholder="Notes (issue, parts needed, gate code, etc.)"></textarea>
+          </div>
+
+          <div class="row">
+            <button class="btn" id="addBtn" type="button">Add Service Call</button>
+          </div>
+
+          <div class="hint">Mobile: swipe right ✅ complete · swipe left 🗑 delete · tap to edit. Desktop: use the buttons on each row.</div>
+        </div>
+
+        <div class="list" id="list"></div>
       </div>
 
-      <div class="composer">
-        <div class="row">
-          <input id="custInput" type="text" placeholder="Customer / Company" autocomplete="off" />
+      <!-- RIGHT: Filters / Team -->
+      <div class="card">
+        <div class="sectionHead">
+          <div class="sectionTitle">Filters</div>
+          <button class="btn secondary" id="resetFiltersBtn" type="button">Reset</button>
         </div>
 
-        <div class="row">
-          <input id="addrInput" type="text" placeholder="Address / Location" />
-        </div>
+        <div class="filters">
+          <div class="row">
+            <input class="search" id="searchInput" type="text" placeholder="Search customer, address, notes…" />
+          </div>
 
-        <div class="row">
-          <input id="whenInput" type="datetime-local" />
-          <select id="prioInput" aria-label="Priority">
-            <option value="low">Low</option>
-            <option value="medium" selected>Medium</option>
-            <option value="high">High</option>
-          </select>
-        </div>
+          <div class="row">
+            <select id="filterTech">
+              <option value="" selected>All techs</option>
+            </select>
+            <select id="filterStatus">
+              <option value="" selected>All statuses</option>
+              <option value="new">New</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="enroute">En Route</option>
+              <option value="onsite">On Site</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
 
-        <div class="row" style="gap:8px;">
-          <button class="chip" type="button" data-quick="none">No time</button>
-          <button class="chip" type="button" data-quick="1h">In 1 hour</button>
-          <button class="chip" type="button" data-quick="6pm">Today 6pm</button>
-          <button class="chip" type="button" data-quick="tom9">Tomorrow 9am</button>
-          <span class="whenLabel" id="whenLabel">No time set</span>
-        </div>
+          <div class="row">
+            <select id="filterPriority">
+              <option value="" selected>All priorities</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+            <select id="filterDone">
+              <option value="open" selected>Open only</option>
+              <option value="all">All (incl. done)</option>
+              <option value="done">Done only</option>
+            </select>
+          </div>
 
-        <div class="row">
-          <textarea id="notesInput" placeholder="Notes (issue, parts needed, phone #, etc.)"></textarea>
+          <div class="hint" style="padding:0;">Tip: set filters for dispatch view, then share the URL to your team (same link).</div>
         </div>
-
-        <div class="row">
-          <button class="btn" id="addBtn" type="button">Add Service Call</button>
-        </div>
-
-        <div class="hint">Swipe right to complete ✅ · swipe left to delete 🗑️ · tap a call to edit.</div>
       </div>
-
-      <div class="list" id="list"></div>
     </div>
   </div>
 
@@ -564,8 +674,13 @@
       </div>
 
       <div class="sheetBody">
-        <input id="eCust" type="text" placeholder="Customer / Company" />
+        <div class="row">
+          <input id="eCust" type="text" placeholder="Customer / Company" />
+          <input id="ePhone" type="text" placeholder="Phone (optional)" inputmode="tel" />
+        </div>
+
         <input id="eAddr" type="text" placeholder="Address / Location" />
+
         <div class="row">
           <input id="eWhen" type="datetime-local" />
           <select id="ePrio" aria-label="Priority">
@@ -573,6 +688,18 @@
             <option value="medium">Medium</option>
             <option value="high">High</option>
           </select>
+          <select id="eStatus" aria-label="Status">
+            <option value="new">New</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="enroute">En Route</option>
+            <option value="onsite">On Site</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <select id="eTech" aria-label="Assigned Tech"></select>
+          <button class="btn secondary" id="eAddTechBtn" type="button">Add Tech…</button>
         </div>
 
         <div class="row" style="gap:8px;">
@@ -592,622 +719,3 @@
       </div>
     </div>
   </div>
-
-  <script>
-    // ======================
-    // Storage
-    // ======================
-    const STORE = {
-      calls: "workforce_calls_v1",
-      theme: "workforce_theme_v1"
-    };
-
-    function loadCalls(){
-      try{ return JSON.parse(localStorage.getItem(STORE.calls) || "[]"); }
-      catch(e){ return []; }
-    }
-    function saveCalls(items){
-      localStorage.setItem(STORE.calls, JSON.stringify(items));
-    }
-
-    // ======================
-    // State
-    // ======================
-    let calls = loadCalls();
-    let lastCreatedId = null;
-    let editingId = null;
-
-    // ======================
-    // Elements
-    // ======================
-    const themeBtn = document.getElementById("themeBtn");
-    const statsPill = document.getElementById("statsPill");
-    const countBadge = document.getElementById("countBadge");
-    const clearDoneBtn = document.getElementById("clearDoneBtn");
-
-    const custInput = document.getElementById("custInput");
-    const addrInput = document.getElementById("addrInput");
-    const whenInput = document.getElementById("whenInput");
-    const prioInput = document.getElementById("prioInput");
-    const notesInput = document.getElementById("notesInput");
-    const addBtn = document.getElementById("addBtn");
-
-    const listEl = document.getElementById("list");
-
-    const whenLabel = document.getElementById("whenLabel");
-    const quickChips = Array.from(document.querySelectorAll('.chip[data-quick]'));
-
-    const notifyBtn = document.getElementById("notifyBtn");
-    const focusAddBtn = document.getElementById("focusAddBtn");
-
-    // sheet
-    const overlay = document.getElementById("overlay");
-    const sheet = document.getElementById("sheet");
-    const closeSheetBtn = document.getElementById("closeSheetBtn");
-    const deleteBtn = document.getElementById("deleteBtn");
-    const saveBtn = document.getElementById("saveBtn");
-
-    const eCust = document.getElementById("eCust");
-    const eAddr = document.getElementById("eAddr");
-    const eWhen = document.getElementById("eWhen");
-    const ePrio = document.getElementById("ePrio");
-    const eNotes = document.getElementById("eNotes");
-    const eWhenLabel = document.getElementById("eWhenLabel");
-    const eQuickChips = Array.from(document.querySelectorAll('.chip[data-equick]'));
-
-    // ======================
-    // Themes
-    // ======================
-    const themes = ["light","dark","charcoal","ocean"];
-
-    function applyTheme(t){
-      document.documentElement.setAttribute("data-theme", t);
-      localStorage.setItem(STORE.theme, t);
-    }
-    function loadTheme(){
-      const saved = localStorage.getItem(STORE.theme);
-      if(saved && themes.includes(saved)) applyTheme(saved);
-      else applyTheme("light");
-    }
-    function nextTheme(){
-      const cur = document.documentElement.getAttribute("data-theme") || "light";
-      const i = themes.indexOf(cur);
-      applyTheme(themes[(i + 1) % themes.length]);
-    }
-
-    // ======================
-    // Utilities
-    // ======================
-    function uid(){
-      return (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
-    }
-
-    function escapeHtml(str){
-      return (str || "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
-    function pad2(n){ return String(n).padStart(2,"0"); }
-
-    function toDatetimeLocalValue(d){
-      const yyyy = d.getFullYear();
-      const mm = pad2(d.getMonth() + 1);
-      const dd = pad2(d.getDate());
-      const hh = pad2(d.getHours());
-      const mi = pad2(d.getMinutes());
-      return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
-    }
-
-    function isToday(d){
-      const now = new Date();
-      return d.getFullYear() === now.getFullYear() &&
-             d.getMonth() === now.getMonth() &&
-             d.getDate() === now.getDate();
-    }
-
-    function formatWhen(iso){
-      if(!iso) return "No time set";
-      const d = new Date(iso);
-      if(Number.isNaN(d.getTime())) return "Invalid time";
-      return d.toLocaleString([], { weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
-    }
-
-    function updateStats(){
-      const open = calls.filter(c => !c.done).length;
-      const total = calls.length;
-      statsPill.textContent = `${open} open · ${total} total`;
-      countBadge.textContent = String(total);
-    }
-
-    // ======================
-    // Quick time (composer)
-    // ======================
-    function clearChipSelection(){
-      quickChips.forEach(c => c.classList.remove("on"));
-    }
-
-    function setWhenLabelFromInput(){
-      const v = (whenInput.value || "").trim();
-      if(!v){ whenLabel.textContent = "No time set"; return; }
-      const d = new Date(v);
-      if(Number.isNaN(d.getTime())){ whenLabel.textContent = "Invalid time"; return; }
-      const prefix = isToday(d) ? "Today" : "Scheduled";
-      whenLabel.textContent = `${prefix}: ${d.toLocaleString([], { weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })}`;
-    }
-
-    function applyQuick(option){
-      clearChipSelection();
-      const chip = quickChips.find(c => c.dataset.quick === option);
-      if(chip) chip.classList.add("on");
-
-      if(option === "none"){
-        whenInput.value = "";
-        setWhenLabelFromInput();
-        return;
-      }
-
-      const now = new Date();
-      let d;
-
-      if(option === "1h"){
-        d = new Date(now.getTime() + 60*60*1000);
-      } else if(option === "6pm"){
-        d = new Date(now);
-        d.setHours(18, 0, 0, 0);
-        if(d.getTime() <= now.getTime()) d.setDate(d.getDate() + 1);
-      } else if(option === "tom9"){
-        d = new Date(now);
-        d.setDate(d.getDate() + 1);
-        d.setHours(9, 0, 0, 0);
-      } else {
-        return;
-      }
-
-      whenInput.value = toDatetimeLocalValue(d);
-      setWhenLabelFromInput();
-    }
-
-    // ======================
-    // Quick time (edit sheet)
-    // ======================
-    function clearEditChipSelection(){
-      eQuickChips.forEach(c => c.classList.remove("on"));
-    }
-
-    function setEditWhenLabel(){
-      const v = (eWhen.value || "").trim();
-      if(!v){ eWhenLabel.textContent = "No time set"; return; }
-      const d = new Date(v);
-      if(Number.isNaN(d.getTime())){ eWhenLabel.textContent = "Invalid time"; return; }
-      const prefix = isToday(d) ? "Today" : "Scheduled";
-      eWhenLabel.textContent = `${prefix}: ${d.toLocaleString([], { weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })}`;
-    }
-
-    function applyEditQuick(option){
-      clearEditChipSelection();
-      const chip = eQuickChips.find(c => c.dataset.equick === option);
-      if(chip) chip.classList.add("on");
-
-      if(option === "none"){
-        eWhen.value = "";
-        setEditWhenLabel();
-        return;
-      }
-
-      const now = new Date();
-      let d;
-
-      if(option === "1h"){
-        d = new Date(now.getTime() + 60*60*1000);
-      } else if(option === "6pm"){
-        d = new Date(now);
-        d.setHours(18, 0, 0, 0);
-        if(d.getTime() <= now.getTime()) d.setDate(d.getDate() + 1);
-      } else if(option === "tom9"){
-        d = new Date(now);
-        d.setDate(d.getDate() + 1);
-        d.setHours(9, 0, 0, 0);
-      } else {
-        return;
-      }
-
-      eWhen.value = toDatetimeLocalValue(d);
-      setEditWhenLabel();
-    }
-
-    // ======================
-    // Animations
-    // ======================
-    function animateRemoveById(id){
-      const wrap = listEl.querySelector(`[data-id="${CSS.escape(id)}"]`);
-      if(!wrap) return;
-      wrap.classList.add("fadeOut");
-      setTimeout(() => { try{ wrap.remove(); }catch(e){} }, 200);
-    }
-
-    // ======================
-    // Swipe
-    // ======================
-    function setupSwipe(rowFrontEl, onRight, onLeft){
-      let startX=0, startY=0, dx=0, dragging=false, locked=false;
-      const THRESH = 88;
-      const MAX = 140;
-
-      function setX(x){ rowFrontEl.style.transform = `translateX(${x}px)`; }
-
-      function onStart(e){
-        if(locked) return;
-        const pt = (e.touches && e.touches[0]) ? e.touches[0] : e;
-        startX = pt.clientX;
-        startY = pt.clientY;
-        dx = 0;
-        dragging = false;
-        rowFrontEl.classList.add("dragging");
-      }
-
-      function onMove(e){
-        if(locked) return;
-        const pt = (e.touches && e.touches[0]) ? e.touches[0] : e;
-        const mx = pt.clientX - startX;
-        const my = pt.clientY - startY;
-
-        if(!dragging){
-          if(Math.abs(my) > Math.abs(mx) && Math.abs(my) > 6){
-            rowFrontEl.classList.remove("dragging");
-            return;
-          }
-          if(Math.abs(mx) > 8){
-            dragging = true;
-          } else {
-            return;
-          }
-        }
-
-        e.preventDefault();
-        dx = Math.max(-MAX, Math.min(MAX, mx));
-        setX(dx);
-      }
-
-      function onEnd(){
-        rowFrontEl.classList.remove("dragging");
-
-        if(Math.abs(dx) < THRESH){
-          rowFrontEl.style.transition = "transform .18s ease";
-          setX(0);
-          rowFrontEl.style.transition = "";
-          dx = 0;
-          return;
-        }
-
-        locked = true;
-        rowFrontEl.style.transition = "transform .18s ease";
-
-        if(dx > 0){
-          setX(MAX);
-          setTimeout(() => { try{ onRight(); }catch(e){} locked=false; }, 120);
-        } else {
-          setX(-MAX);
-          setTimeout(() => { try{ onLeft(); }catch(e){} locked=false; }, 140);
-        }
-      }
-
-      rowFrontEl.addEventListener("touchstart", onStart, { passive:true });
-      rowFrontEl.addEventListener("touchmove", onMove, { passive:false });
-      rowFrontEl.addEventListener("touchend", onEnd, { passive:true });
-      rowFrontEl.addEventListener("touchcancel", onEnd, { passive:true });
-    }
-
-    // ======================
-    // CRUD
-    // ======================
-    function addCall(){
-      const cust = custInput.value.trim();
-      const addr = addrInput.value.trim();
-      const when = (whenInput.value || "").trim();
-      const prio = prioInput.value;
-      const notes = notesInput.value.trim();
-
-      if(!cust){
-        alert("Add a Customer / Company.");
-        return;
-      }
-
-      const item = {
-        id: uid(),
-        customer: cust,
-        address: addr,
-        when,
-        priority: prio,
-        notes,
-        done: false,
-        created: Date.now()
-      };
-
-      calls.unshift(item);
-      lastCreatedId = item.id;
-      saveCalls(calls);
-
-      custInput.value = "";
-      addrInput.value = "";
-      whenInput.value = "";
-      prioInput.value = "medium";
-      notesInput.value = "";
-      clearChipSelection();
-      setWhenLabelFromInput();
-      custInput.focus();
-
-      render();
-      scheduleInAppNotification(item);
-    }
-
-    function toggleDone(id){
-      const item = calls.find(c => c.id === id);
-      if(!item) return;
-      item.done = !item.done;
-      saveCalls(calls);
-      render();
-    }
-
-    function deleteCall(id){
-      calls = calls.filter(c => c.id !== id);
-      saveCalls(calls);
-      animateRemoveById(id);
-      setTimeout(render, 210);
-    }
-
-    function clearDone(){
-      const doneIds = calls.filter(c => c.done).map(c => c.id);
-      calls = calls.filter(c => !c.done);
-      saveCalls(calls);
-      doneIds.forEach(id => animateRemoveById(id));
-      setTimeout(render, 220);
-    }
-
-    // ======================
-    // Edit Sheet
-    // ======================
-    function openSheetFor(id){
-      const item = calls.find(c => c.id === id);
-      if(!item) return;
-
-      editingId = id;
-
-      eCust.value = item.customer || "";
-      eAddr.value = item.address || "";
-      eWhen.value = item.when || "";
-      ePrio.value = item.priority || "medium";
-      eNotes.value = item.notes || "";
-
-      clearEditChipSelection();
-      setEditWhenLabel();
-
-      overlay.classList.add("open");
-      sheet.classList.add("open");
-
-      setTimeout(() => eCust.focus(), 60);
-    }
-
-    function closeSheet(){
-      editingId = null;
-      overlay.classList.remove("open");
-      sheet.classList.remove("open");
-    }
-
-    function saveEdit(){
-      if(!editingId) return;
-      const item = calls.find(c => c.id === editingId);
-      if(!item) return;
-
-      const cust = eCust.value.trim();
-      if(!cust){
-        alert("Customer / Company can’t be empty.");
-        return;
-      }
-
-      item.customer = cust;
-      item.address = eAddr.value.trim();
-      item.when = (eWhen.value || "").trim();
-      item.priority = ePrio.value;
-      item.notes = eNotes.value.trim();
-
-      saveCalls(calls);
-      closeSheet();
-      render();
-    }
-
-    function deleteFromSheet(){
-      if(!editingId) return;
-      const id = editingId;
-      closeSheet();
-      deleteCall(id);
-    }
-
-    // ======================
-    // Notifications (in-app only)
-    // ======================
-    async function enableNotifications(){
-      if(!("Notification" in window)){
-        alert("Notifications aren’t supported here.");
-        return;
-      }
-      const perm = await Notification.requestPermission();
-      if(perm !== "granted"){
-        alert("Notifications not enabled.");
-        return;
-      }
-      alert("Notifications enabled ✅\n\nNote: these fire while Work Force is open. True push while closed is possible, but takes more setup.");
-    }
-
-    function scheduleInAppNotification(call){
-      if(!call.when) return;
-      if(!("Notification" in window)) return;
-      if(Notification.permission !== "granted") return;
-
-      const ms = new Date(call.when).getTime() - Date.now();
-      if(!Number.isFinite(ms) || ms <= 0) return;
-
-      setTimeout(() => {
-        try{ new Notification("Work Force Service Call", { body: call.customer }); }catch(e){}
-      }, ms);
-    }
-
-    // ======================
-    // Render
-    // ======================
-    function render(){
-      listEl.innerHTML = "";
-
-      if(calls.length === 0){
-        const empty = document.createElement("div");
-        empty.className = "swipeWrap";
-        empty.innerHTML = `
-          <div class="rowFront">
-            <div class="left">
-              <div class="textWrap">
-                <p class="task" style="color:var(--muted);">No service calls yet. Add one above 👆</p>
-                <p class="meta">Tip: set a priority and a time. Swipe right to complete.</p>
-              </div>
-            </div>
-          </div>
-        `;
-        listEl.appendChild(empty);
-        updateStats();
-        return;
-      }
-
-      const sorted = calls
-        .slice()
-        .sort((a,b) => {
-          if(a.done !== b.done) return a.done ? 1 : -1;
-
-          // priority sort: high first, then medium, then low
-          const pr = { high: 0, medium: 1, low: 2 };
-          const pa = pr[a.priority] ?? 1;
-          const pb = pr[b.priority] ?? 1;
-          if(pa !== pb) return pa - pb;
-
-          // then by time (if set), then newest
-          const ta = a.when ? new Date(a.when).getTime() : Infinity;
-          const tb = b.when ? new Date(b.when).getTime() : Infinity;
-          if(ta !== tb) return ta - tb;
-
-          return b.created - a.created;
-        });
-
-      sorted.forEach(call => {
-        const wrap = document.createElement("div");
-        wrap.className = "swipeWrap";
-        wrap.dataset.id = call.id;
-
-        const prioLabel = (call.priority || "medium").toLowerCase();
-        const prioText = prioLabel === "high" ? "High" : prioLabel === "low" ? "Low" : "Medium";
-
-        const metaBits = [];
-        if(call.address) metaBits.push(`<span>${escapeHtml(call.address)}</span>`);
-        metaBits.push(`<span>${escapeHtml(formatWhen(call.when))}</span>`);
-        metaBits.push(`<span class="pillMini ${prioLabel}">${prioText} Priority</span>`);
-        if(call.done) metaBits.push(`<span>Done</span>`);
-
-        wrap.innerHTML = `
-          <div class="swipeBg bgDone"><div>Done</div><div></div></div>
-          <div class="swipeBg bgDel"><div>Delete</div></div>
-
-          <div class="rowFront ${call.id === lastCreatedId ? "animateIn" : ""}">
-            <div class="left">
-              <button class="check ${call.done ? "on" : ""}" aria-label="Toggle done" type="button">
-                ${call.done ? "✓" : ""}
-              </button>
-              <div class="textWrap">
-                <p class="task" style="${call.done ? "text-decoration:line-through; color:var(--muted);" : ""}">
-                  ${escapeHtml(call.customer)}
-                </p>
-                <p class="meta">${metaBits.join("")}</p>
-                ${call.notes ? `<p class="meta" style="margin-top:6px;">${escapeHtml(call.notes)}</p>` : ""}
-              </div>
-            </div>
-          </div>
-        `;
-
-        const rowFront = wrap.querySelector(".rowFront");
-        const checkBtn = wrap.querySelector(".check");
-
-        // tap to edit (except check)
-        rowFront.addEventListener("click", (e) => {
-          if(e.target === checkBtn) return;
-          openSheetFor(call.id);
-        });
-
-        checkBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          toggleDone(call.id);
-        });
-
-        setupSwipe(rowFront, () => toggleDone(call.id), () => deleteCall(call.id));
-
-        listEl.appendChild(wrap);
-      });
-
-      lastCreatedId = null;
-      updateStats();
-    }
-
-    // ======================
-    // Events
-    // ======================
-    themeBtn.addEventListener("click", nextTheme);
-    addBtn.addEventListener("click", addCall);
-
-    custInput.addEventListener("keydown", (e) => {
-      if(e.key === "Enter") addCall();
-    });
-
-    clearDoneBtn.addEventListener("click", clearDone);
-
-    whenInput.addEventListener("change", () => {
-      clearChipSelection();
-      setWhenLabelFromInput();
-    });
-
-    quickChips.forEach(chip => {
-      chip.addEventListener("click", () => applyQuick(chip.dataset.quick));
-    });
-
-    notifyBtn.addEventListener("click", enableNotifications);
-
-    focusAddBtn.addEventListener("click", () => {
-      custInput.focus();
-      custInput.scrollIntoView({ behavior:"smooth", block:"center" });
-    });
-
-    // sheet events
-    overlay.addEventListener("click", closeSheet);
-    closeSheetBtn.addEventListener("click", closeSheet);
-    saveBtn.addEventListener("click", saveEdit);
-    deleteBtn.addEventListener("click", deleteFromSheet);
-
-    eWhen.addEventListener("change", () => {
-      clearEditChipSelection();
-      setEditWhenLabel();
-    });
-
-    eQuickChips.forEach(chip => {
-      chip.addEventListener("click", () => applyEditQuick(chip.dataset.equick));
-    });
-
-    document.addEventListener("keydown", (e) => {
-      if(e.key === "Escape" && sheet.classList.contains("open")) closeSheet();
-    });
-
-    // ======================
-    // Boot
-    // ======================
-    loadTheme();
-    render();
-    setWhenLabelFromInput();
-  </script>
-</body>
-</html>
