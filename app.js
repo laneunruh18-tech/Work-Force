@@ -1,13 +1,4 @@
-/* Work Force — Chunk 1
-   - Add service calls
-   - Priority + status
-   - Filter chips
-   - Persistent storage (localStorage)
-   - Delete call
-   - (Edit + swipe coming in Chunk 2/3)
-*/
-
-const STORAGE_KEY = "workforce_calls_v1";
+const STORAGE_KEY = "workforce_calls_v2";
 
 const el = {
   btnNew: document.getElementById("btnNew"),
@@ -19,31 +10,49 @@ const el = {
   cards: document.getElementById("cards"),
   empty: document.getElementById("emptyState"),
   chips: Array.from(document.querySelectorAll(".chip")),
+  search: document.getElementById("searchInput"),
+
   name: document.getElementById("name"),
   phone: document.getElementById("phone"),
   address: document.getElementById("address"),
   priority: document.getElementById("priority"),
   status: document.getElementById("status"),
   notes: document.getElementById("notes"),
+  editId: document.getElementById("editId"),
+  modalTitle: document.getElementById("modalTitle"),
+  btnSave: document.getElementById("btnSave"),
 };
 
 let state = {
-  calls: loadCalls(),
+  calls: migrateOrLoad(),
   filter: "all",
+  query: "",
 };
 
 function uid() {
   return Math.random().toString(16).slice(2) + Date.now().toString(16);
 }
 
-function loadCalls() {
+function migrateOrLoad() {
+  // migrate from v1 if present
+  const v2 = safeLoad(STORAGE_KEY);
+  if (v2) return v2;
+
+  const v1 = safeLoad("workforce_calls_v1");
+  if (v1) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(v1));
+    return v1;
+  }
+  return [];
+}
+
+function safeLoad(key) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const data = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(data)) return [];
-    return data;
+    const raw = localStorage.getItem(key);
+    const data = raw ? JSON.parse(raw) : null;
+    return Array.isArray(data) ? data : null;
   } catch {
-    return [];
+    return null;
   }
 }
 
@@ -51,9 +60,30 @@ function saveCalls() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.calls));
 }
 
-function openModal() {
+function openModal(mode = "new", call = null) {
   el.overlay.classList.remove("hidden");
   el.overlay.setAttribute("aria-hidden", "false");
+
+  if (mode === "edit" && call) {
+    el.modalTitle.textContent = "Edit Service Call";
+    el.btnSave.textContent = "Save Changes";
+    el.editId.value = call.id;
+
+    el.name.value = call.name || "";
+    el.phone.value = call.phone || "";
+    el.address.value = call.address || "";
+    el.priority.value = call.priority || "medium";
+    el.status.value = call.status || "new";
+    el.notes.value = call.notes || "";
+  } else {
+    el.modalTitle.textContent = "New Service Call";
+    el.btnSave.textContent = "Save Call";
+    el.editId.value = "";
+    el.form.reset();
+    el.priority.value = "medium";
+    el.status.value = "new";
+  }
+
   setTimeout(() => el.name.focus(), 0);
 }
 
@@ -61,8 +91,7 @@ function closeModal() {
   el.overlay.classList.add("hidden");
   el.overlay.setAttribute("aria-hidden", "true");
   el.form.reset();
-  el.priority.value = "medium";
-  el.status.value = "new";
+  el.editId.value = "";
 }
 
 function formatStatus(s) {
@@ -75,11 +104,6 @@ function formatStatus(s) {
   }
 }
 
-function formatPhone(phone) {
-  const p = (phone || "").trim();
-  return p;
-}
-
 function badgePriority(priority) {
   const label = priority === "high" ? "High" : priority === "low" ? "Low" : "Medium";
   return `<span class="badge priority ${priority}">Priority: ${label}</span>`;
@@ -89,17 +113,24 @@ function badgeStatus(status) {
   return `<span class="badge">Status: ${formatStatus(status)}</span>`;
 }
 
+function matchesQuery(call, q) {
+  if (!q) return true;
+  const hay = [
+    call.name, call.phone, call.address, call.notes
+  ].join(" ").toLowerCase();
+  return hay.includes(q);
+}
+
 function render() {
+  const q = (state.query || "").trim().toLowerCase();
+
   const calls = state.calls
     .slice()
-    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+    .filter(c => (state.filter === "all" ? true : c.status === state.filter))
+    .filter(c => matchesQuery(c, q));
 
-  const filtered =
-    state.filter === "all"
-      ? calls
-      : calls.filter(c => c.status === state.filter);
-
-  el.cards.innerHTML = filtered.map(cardHTML).join("");
+  el.cards.innerHTML = calls.map(cardHTML).join("");
 
   const hasAny = state.calls.length > 0;
   el.empty.style.display = hasAny ? "none" : "block";
@@ -108,7 +139,7 @@ function render() {
 }
 
 function cardHTML(call) {
-  const phone = formatPhone(call.phone);
+  const phone = (call.phone || "").trim();
   const address = (call.address || "").trim();
   const notes = (call.notes || "").trim();
 
@@ -136,12 +167,16 @@ function cardHTML(call) {
         <button class="btn primary btn-call" type="button" ${phone ? "" : "disabled"} data-tel="${telHref}">
           Call
         </button>
-        <button class="btn ghost btn-status" type="button">
-          Next Status
-        </button>
-        <button class="btn ghost btn-delete" type="button">
-          Delete
-        </button>
+
+        <select class="small-select status-select" data-id="${call.id}" aria-label="Change status">
+          <option value="new" ${call.status==="new"?"selected":""}>New</option>
+          <option value="scheduled" ${call.status==="scheduled"?"selected":""}>Scheduled</option>
+          <option value="in_progress" ${call.status==="in_progress"?"selected":""}>In Progress</option>
+          <option value="done" ${call.status==="done"?"selected":""}>Completed</option>
+        </select>
+
+        <button class="btn ghost btn-edit" type="button">Edit</button>
+        <button class="btn ghost btn-delete" type="button">Delete</button>
       </div>
     </article>
   `;
@@ -150,26 +185,38 @@ function cardHTML(call) {
 function wireCardButtons() {
   const cards = Array.from(el.cards.querySelectorAll(".card"));
 
+  // Call button
+  el.cards.querySelectorAll(".btn-call").forEach(btn => {
+    if (btn.disabled) return;
+    btn.addEventListener("click", () => {
+      const tel = btn.getAttribute("data-tel");
+      if (tel) window.location.href = tel;
+    });
+  });
+
+  // Status dropdown
+  el.cards.querySelectorAll(".status-select").forEach(sel => {
+    sel.addEventListener("change", () => {
+      const id = sel.getAttribute("data-id");
+      const idx = state.calls.findIndex(c => c.id === id);
+      if (idx === -1) return;
+      state.calls[idx].status = sel.value;
+      saveCalls();
+      render();
+    });
+  });
+
+  // Edit / Delete per card
   for (const card of cards) {
     const id = card.getAttribute("data-id");
-    const btnCall = card.querySelector(".btn-call");
-    const btnStatus = card.querySelector(".btn-status");
+    const btnEdit = card.querySelector(".btn-edit");
     const btnDelete = card.querySelector(".btn-delete");
 
-    if (btnCall && !btnCall.disabled) {
-      btnCall.addEventListener("click", () => {
-        const tel = btnCall.getAttribute("data-tel");
-        if (tel) window.location.href = tel;
-      });
-    }
-
-    if (btnStatus) {
-      btnStatus.addEventListener("click", () => {
-        const idx = state.calls.findIndex(c => c.id === id);
-        if (idx === -1) return;
-        state.calls[idx].status = nextStatus(state.calls[idx].status);
-        saveCalls();
-        render();
+    if (btnEdit) {
+      btnEdit.addEventListener("click", () => {
+        const call = state.calls.find(c => c.id === id);
+        if (!call) return;
+        openModal("edit", call);
       });
     }
 
@@ -177,7 +224,6 @@ function wireCardButtons() {
       btnDelete.addEventListener("click", () => {
         const call = state.calls.find(c => c.id === id);
         if (!call) return;
-
         const ok = confirm(`Delete service call for "${call.name}"?`);
         if (!ok) return;
 
@@ -187,12 +233,6 @@ function wireCardButtons() {
       });
     }
   }
-}
-
-function nextStatus(status) {
-  const order = ["new", "scheduled", "in_progress", "done"];
-  const i = order.indexOf(status);
-  return order[(i + 1) % order.length] || "new";
 }
 
 function escapeHTML(str) {
@@ -205,8 +245,8 @@ function escapeHTML(str) {
 }
 
 /* Events */
-el.btnNew.addEventListener("click", openModal);
-el.btnNewEmpty.addEventListener("click", openModal);
+el.btnNew.addEventListener("click", () => openModal("new"));
+el.btnNewEmpty.addEventListener("click", () => openModal("new"));
 el.btnClose.addEventListener("click", closeModal);
 el.btnCancel.addEventListener("click", closeModal);
 
@@ -217,9 +257,7 @@ el.overlay.addEventListener("click", (e) => {
 el.form.addEventListener("submit", (e) => {
   e.preventDefault();
 
-  const call = {
-    id: uid(),
-    createdAt: Date.now(),
+  const payload = {
     name: el.name.value.trim(),
     phone: el.phone.value.trim(),
     address: el.address.value.trim(),
@@ -228,7 +266,21 @@ el.form.addEventListener("submit", (e) => {
     notes: el.notes.value.trim(),
   };
 
-  state.calls.unshift(call);
+  const editId = (el.editId.value || "").trim();
+
+  if (editId) {
+    const idx = state.calls.findIndex(c => c.id === editId);
+    if (idx !== -1) {
+      state.calls[idx] = { ...state.calls[idx], ...payload };
+    }
+  } else {
+    state.calls.unshift({
+      id: uid(),
+      createdAt: Date.now(),
+      ...payload,
+    });
+  }
+
   saveCalls();
   closeModal();
   render();
@@ -241,6 +293,11 @@ el.chips.forEach(chip => {
     state.filter = chip.getAttribute("data-filter") || "all";
     render();
   });
+});
+
+el.search.addEventListener("input", () => {
+  state.query = el.search.value || "";
+  render();
 });
 
 /* Kickoff */
