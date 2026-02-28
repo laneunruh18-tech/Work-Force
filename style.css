@@ -350,3 +350,56 @@ textarea{ resize: vertical; min-height: 90px; }
   outline: 2px solid rgba(106,228,255,.35);
   box-shadow: 0 0 0 6px rgba(106,228,255,.08), 0 10px 22px rgba(0,0,0,.25);
 }
+/* Board view */
+.hidden{ display:none !important; }
+
+.view-toggle{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  justify-content:flex-start;
+  margin-right:auto;
+}
+
+.board{
+  padding: 14px;
+  display:grid;
+  grid-template-columns: repeat(5, minmax(220px, 1fr));
+  gap: 12px;
+  overflow:auto;
+}
+
+.board-col{
+  border: 1px solid var(--line);
+  background: rgba(15,26,47,.45);
+  border-radius: calc(var(--radius) - 4px);
+  padding: 10px;
+  min-height: 240px;
+}
+
+.board-col h3{
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.dropzone{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  min-height: 180px;
+}
+
+.board .card{
+  grid-column: auto; /* override list grid sizing */
+}
+
+.board-col.drag-over{
+  outline: 2px solid rgba(106,228,255,.35);
+  box-shadow: 0 0 0 6px rgba(106,228,255,.08);
+}
