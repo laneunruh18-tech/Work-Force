@@ -649,7 +649,8 @@ await updateDoc(doc(db, "calls", editId), patch);
     closeModal();
   } catch (err) {
     console.error(err);
-    alert("Save failed. Are you logged in? Are Firestore rules published?");
+    console.error(err);
+alert(`Save failed:\n${err?.code || ""}\n${err?.message || err}`);
   }
 });
 
