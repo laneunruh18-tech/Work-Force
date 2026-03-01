@@ -2,502 +2,628 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1220" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Work Force</title>
 
-  <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="style.css" />
+  <!-- Helps Safari/iPad not cling to old HTML too hard -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --panel:#fafafa;
+      --border:#e8e8e8;
+      --text:#111;
+      --muted:rgba(0,0,0,.6);
+      --shadow:0 10px 24px rgba(0,0,0,.06);
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    }
+
+    .app{
+      height:100vh;
+      display:flex;
+      overflow:hidden;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      width:300px;
+      border-right:1px solid var(--border);
+      padding:14px;
+      background:var(--panel);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .brand h1{
+      margin:0;
+      font-size:18px;
+      letter-spacing:.2px;
+    }
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:600;
+    }
+    .btn:hover{filter:brightness(0.98)}
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+    .folder-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      overflow:auto;
+      padding-right:6px;
+    }
+    .folder{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#fff;
+      cursor:pointer;
+      user-select:none;
+    }
+    .folder.active{
+      outline:2px solid rgba(0,0,0,.12);
+      background:#fff;
+    }
+    .folder .left{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
+    }
+    .folder .name{
+      font-weight:800;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .folder .count{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .folder .menu{
+      color:var(--muted);
+      font-weight:900;
+      padding:0 6px;
+    }
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.4;
+    }
+
+    /* Main */
+    .main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      padding:16px;
+      gap:12px;
+      overflow:hidden;
+    }
+    .topbar{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:14px;
+      padding:14px;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background:#fff;
+      box-shadow:var(--shadow);
+    }
+    .titleblock .title{
+      font-size:22px;
+      font-weight:900;
+      margin:0;
+    }
+    .titleblock .subtitle{
+      margin-top:4px;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .search{
+      width:280px;
+      max-width:36vw;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      outline:none;
+      font-weight:600;
+    }
+
+    /* Calls list */
+    .listwrap{
+      flex:1;
+      overflow:auto;
+      padding-right:6px;
+    }
+    .empty{
+      color:var(--muted);
+      padding:16px;
+    }
+    .call{
+      display:grid;
+      grid-template-columns: 130px 1.2fr 1fr 160px 170px 150px;
+      gap:10px;
+      align-items:center;
+      padding:12px 14px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:#fff;
+      margin-bottom:10px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:5px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      font-size:12px;
+      font-weight:800;
+      width:max-content;
+    }
+    .muted{color:var(--muted)}
+    .strong{font-weight:900}
+    .nowrap{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .links{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+    .link{
+      cursor:pointer;
+      text-decoration:underline;
+      font-weight:800;
+      color:#111;
+    }
+    .link:hover{opacity:.8}
+
+    /* Small screens fallback (still desktop-first) */
+    @media (max-width: 980px){
+      .sidebar{width:260px}
+      .call{grid-template-columns: 120px 1fr 1fr; grid-auto-rows:auto}
+      .call .colhide{display:none}
+      .search{display:none}
+    }
+  </style>
 </head>
 
 <body>
   <div class="app">
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="brand">Work Force</div>
-      <button id="btnNewFolder" class="btn">+ New Folder</button>
-    </div>
-
-    <div id="folderList" class="folder-list"></div>
-  </aside>
-
-  <main class="main">
-    <div class="main-header">
-      <div>
-        <div id="activeFolderTitle" class="title">Folder</div>
-        <div id="activeFolderSubtitle" class="subtitle">Add calls fast. Completed calls move out automatically.</div>
-      </div>
-
-      <div class="actions">
-        <button id="btnNewCall" class="btn primary">+ New Service Call</button>
-      </div>
-    </div>
-
-    <div id="callList" class="call-list"></div>
-  </main>
-</div>
-  <div class="app">
-    <!-- Top Bar -->
-    <header class="topbar">
+    <aside class="sidebar">
       <div class="brand">
-        <div class="dot"></div>
-        <div>
-          <h1>Work Force</h1>
-          <p>Dispatch + scheduling dashboard</p>
-        </div>
+        <h1>Work Force</h1>
+        <button class="btn" id="btnNewFolder">+ Folder</button>
       </div>
 
-      <div class="top-actions">
-        <button id="btnLogout" class="btn ghost" type="button">Log out</button>
-        <button id="btnNew" class="btn primary" type="button">+ New Service Call</button>
+      <div class="hint">
+        💡 <b>PC tip:</b> Right-click a folder to rename/delete.<br/>
+        New service calls automatically go into the folder you’re viewing.
       </div>
-    </header>
 
-    <!-- Main -->
+      <div class="folder-list" id="folderList"></div>
+    </aside>
+
     <main class="main">
-      <section class="panel">
-        <div class="panel-head">
-          <h2>Active Calls</h2>
-
-          <!-- View toggle (List / Board) -->
-          <div class="view-toggle">
-            <button id="viewList" class="chip active" type="button">List</button>
-            <button id="viewBoard" class="chip" type="button">Board</button>
-          </div>
-
-          <div class="panel-tools">
-            <!-- Search -->
-            <div class="search">
-              <span class="search-icon">⌕</span>
-              <input id="searchInput" type="search" placeholder="Search name, phone, address, notes..." />
-            </div>
-
-            <!-- Status filter chips -->
-            <div class="chips" role="tablist" aria-label="Filter by status">
-              <button class="chip active" data-filter="all" type="button">All</button>
-              <button class="chip" data-filter="new" type="button">New</button>
-              <button class="chip" data-filter="scheduled" type="button">Scheduled</button>
-              <button class="chip" data-filter="in_progress" type="button">In Progress</button>
-              <button class="chip" data-filter="done" type="button">Completed</button>
-            </div>
+      <div class="topbar">
+        <div class="titleblock">
+          <div class="title" id="activeFolderTitle">Folder</div>
+          <div class="subtitle" id="activeFolderSubtitle">
+            Add calls fast. Mark Complete to move into Completed automatically.
           </div>
         </div>
 
-        <!-- Empty state -->
-        <div id="emptyState" class="empty">
-          <div class="empty-card">
-            <h3>No service calls yet</h3>
-            <p>Add your first call and start tracking priority + status.</p>
-            <button id="btnNewEmpty" class="btn primary" type="button">+ New Service Call</button>
-          </div>
+        <div class="actions">
+          <input class="search" id="searchBox" placeholder="Search customer / location..." />
+          <button class="btn primary" id="btnNewCall">+ New Service Call</button>
         </div>
+      </div>
 
-        <!-- List view -->
-        <div id="cards" class="cards" aria-live="polite"></div>
-
-        <!-- Board view -->
-        <div id="board" class="board hidden" aria-label="Dispatch board"></div>
-      </section>
+      <div class="listwrap" id="callList"></div>
     </main>
-
-    <!-- Login Overlay -->
-    <div id="authOverlay" class="overlay hidden" aria-hidden="true">
-      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-        <div class="modal-head">
-          <h3 id="authTitle">Sign in to Work Force</h3>
-          <span style="color:var(--muted); font-size:12px;">Syncs across computers</span>
-        </div>
-
-        <form id="authForm" class="form">
-          <div class="grid">
-            <label class="field full">
-              <span>Email</span>
-              <input id="authEmail" type="email" autocomplete="email" placeholder="you@company.com" required />
-            </label>
-
-            <label class="field full">
-              <span>Password</span>
-              <input id="authPassword" type="password" autocomplete="current-password" placeholder="••••••••" required />
-            </label>
-          </div>
-
-          <div class="form-actions" style="justify-content:space-between; flex-wrap:wrap;">
-            <button id="btnCreateAccount" class="btn ghost" type="button">Create account</button>
-            <div style="display:flex; gap:10px; align-items:center;">
-              <span id="authMsg" style="color:var(--muted); font-size:12px;"></span>
-              <button class="btn primary" type="submit">Sign in</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modal (New/Edit Call) -->
-    <div id="modalOverlay" class="overlay hidden" aria-hidden="true">
-      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-        <div class="modal-head">
-          <h3 id="modalTitle">New Service Call</h3>
-          <button id="btnClose" class="icon-btn" type="button" aria-label="Close">✕</button>
-        </div>
-
-        <form id="callForm" class="form">
-          <div class="grid">
-            <label class="field">
-              <span>Customer Name</span>
-              <input id="name" type="text" autocomplete="name" placeholder="John Smith" required />
-            </label>
-
-            <label class="field">
-              <span>Phone Number</span>
-              <input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="555-123-4567" />
-            </label>
-
-            <label class="field full">
-              <span>Address</span>
-              <input id="address" type="text" autocomplete="street-address" placeholder="123 Main St, City" />
-            </label>
-
-            <label class="field">
-              <span>Priority</span>
-              <select id="priority">
-                <option value="low">Low</option>
-                <option value="medium" selected>Medium</option>
-                <option value="high">High</option>
-              </select>
-            </label>
-
-            <label class="field">
-              <span>Status</span>
-              <select id="status">
-                <option value="new" selected>New</option>
-                <option value="scheduled">Scheduled</option>
-                <option value="in_progress">In Progress</option>
-                <option value="done">Completed</option>
-              </select>
-            </label>
-
-            <!-- Scheduled date/time -->
-            <label class="field full">
-              <span>Scheduled For</span>
-              <input id="scheduledAt" type="datetime-local" />
-            </label>
-
-            <label class="field full">
-              <span>Notes</span>
-              <textarea id="notes" rows="3" placeholder="Gate code, equipment needed, customer preference..."></textarea>
-            </label>
-          </div>
-
-          <div class="form-actions">
-            <button class="btn ghost" id="btnCancel" type="button">Cancel</button>
-            <button class="btn primary" id="btnSave" type="submit">Save Call</button>
-          </div>
-
-          <!-- Hidden edit id -->
-          <input id="editId" type="hidden" value="" />
-        </form>
-      </div>
-    </div>
-
-    <!-- Context Menu (desktop right-click) -->
-    <div id="ctx" class="overlay hidden" aria-hidden="true"
-      style="background:transparent; align-items:flex-start; justify-content:flex-start;">
-      <div id="ctxMenu" style="
-        position:fixed;
-        min-width:190px;
-        background: rgba(11,18,32,.95);
-        border:1px solid rgba(255,255,255,.10);
-        border-radius:14px;
-        box-shadow: 0 18px 40px rgba(0,0,0,.55);
-        padding:8px;
-        z-index:100;
-        backdrop-filter: blur(10px);
-      ">
-        <button class="btn ghost ctx-item" data-action="call" style="width:100%; text-align:left;">📞 Call</button>
-        <button class="btn ghost ctx-item" data-action="edit" style="width:100%; text-align:left;">✏️ Edit</button>
-        <button class="btn ghost ctx-item" data-action="complete" style="width:100%; text-align:left;">✅ Complete</button>
-        <button class="btn ghost ctx-item" data-action="delete" style="width:100%; text-align:left;">🗑️ Delete</button>
-      </div>
-    </div>
   </div>
 
-  <!-- IMPORTANT: module script so app.js can import firebase.js -->
-  <script type="module" src="app.js"></script>
-
   <script>
-    // Optional SW registration (safe even if missing; errors won't break the app)
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
-    }
-  </script>
-  <script>
-/** ========= Work Force: Folders + Calls (LocalStorage) =========
- * - Custom folders (Grain, Irrigation, etc.)
- * - Active folder controls where new calls go
- * - Completing a call moves it to global Completed folder
- */
+    /*****************************************************************
+     * Work Force (PC-first) - Folders + Service Calls (LocalStorage)
+     * - Custom folders (named by you)
+     * - Each call belongs to ONE folder
+     * - New call auto goes into ACTIVE folder
+     * - Completing a call moves it to global Completed folder
+     *****************************************************************/
 
-const STORAGE_KEY = "workforce_v1";
+    const STORAGE_KEY = "workforce_v1";
 
-const DEFAULT_STATE = {
-  folders: [
-    { id: "f_grain", name: "Grain" },
-    { id: "f_irrig", name: "Irrigation" },
-    { id: "f_completed", name: "Completed", locked: true }
-  ],
-  activeFolderId: "f_grain",
-  calls: [] // each: { id, folderId, priority, customer, location, status, createdAt, updatedAt }
-};
-
-function uid(prefix="id") {
-  return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now()}`;
-}
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return structuredClone(DEFAULT_STATE);
-    const parsed = JSON.parse(raw);
-
-    // tiny safety merge
-    return {
-      ...structuredClone(DEFAULT_STATE),
-      ...parsed,
-      folders: parsed.folders?.length ? parsed.folders : structuredClone(DEFAULT_STATE.folders),
-      calls: Array.isArray(parsed.calls) ? parsed.calls : []
+    const DEFAULT_STATE = {
+      folders: [
+        { id: "f_grain", name: "Grain" },
+        { id: "f_irrig", name: "Irrigation" },
+        { id: "f_completed", name: "Completed", locked: true }
+      ],
+      activeFolderId: "f_grain",
+      calls: []
+      // call shape:
+      // { id, folderId, priority, customer, location, status, createdAt, updatedAt }
     };
-  } catch {
-    return structuredClone(DEFAULT_STATE);
-  }
-}
 
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
+    const $ = (id) => document.getElementById(id);
 
-let state = loadState();
+    let state = loadState();
+    let searchText = "";
 
-/** ---------- Rendering ---------- */
-const folderListEl = document.getElementById("folderList");
-const callListEl = document.getElementById("callList");
-const activeFolderTitleEl = document.getElementById("activeFolderTitle");
+    function uid(prefix="id") {
+      return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now()}`;
+    }
 
-function folderCallCount(folderId) {
-  return state.calls.filter(c => c.folderId === folderId).length;
-}
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return structuredClone(DEFAULT_STATE);
+        const parsed = JSON.parse(raw);
 
-function getFolder(folderId) {
-  return state.folders.find(f => f.id === folderId);
-}
+        // safety merge
+        const merged = {
+          ...structuredClone(DEFAULT_STATE),
+          ...parsed,
+          folders: Array.isArray(parsed.folders) && parsed.folders.length ? parsed.folders : structuredClone(DEFAULT_STATE.folders),
+          calls: Array.isArray(parsed.calls) ? parsed.calls : []
+        };
 
-function renderFolders() {
-  folderListEl.innerHTML = "";
+        // ensure Completed exists
+        if(!merged.folders.find(f => f.id === "f_completed")){
+          merged.folders.push({ id:"f_completed", name:"Completed", locked:true });
+        }
+        // keep Completed last
+        merged.folders = merged.folders.filter(f => f.id !== "f_completed").concat(merged.folders.find(f => f.id === "f_completed"));
+        // ensure active folder
+        if(!merged.folders.find(f => f.id === merged.activeFolderId)){
+          merged.activeFolderId = merged.folders[0]?.id || "f_completed";
+        }
 
-  state.folders.forEach(folder => {
-    const row = document.createElement("div");
-    row.className = "folder" + (folder.id === state.activeFolderId ? " active" : "");
-    row.dataset.id = folder.id;
+        return merged;
+      }catch{
+        return structuredClone(DEFAULT_STATE);
+      }
+    }
 
-    const left = document.createElement("div");
-    left.innerHTML = `<div class="name">${folder.name}</div><div class="count">${folderCallCount(folder.id)} calls</div>`;
+    function saveState(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
 
-    const right = document.createElement("div");
-    right.className = "menu";
-    right.textContent = folder.locked ? "" : "⋯";
+    function escapeHtml(str) {
+      return String(str ?? "").replace(/[&<>"']/g, s => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+      }[s]));
+    }
 
-    row.appendChild(left);
-    row.appendChild(right);
+    function getFolder(folderId){
+      return state.folders.find(f => f.id === folderId);
+    }
 
-    row.addEventListener("click", () => {
-      state.activeFolderId = folder.id;
-      saveState();
-      render();
-    });
+    function folderCallCount(folderId){
+      return state.calls.filter(c => c.folderId === folderId).length;
+    }
 
-    // Right-click menu for rename/delete (PC-friendly)
-    if (!folder.locked) {
-      row.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-        folderContextMenu(folder.id);
+    function priorityPill(priority){
+      const p = priority || "Medium";
+      const icon = p === "High" ? "🔴" : p === "Low" ? "🟢" : "🟡";
+      return `<span class="pill">${icon} ${escapeHtml(p)}</span>`;
+    }
+
+    /** ---------------- RENDER ---------------- */
+    function render(){
+      renderFolders();
+      renderCalls();
+    }
+
+    function renderFolders(){
+      const list = $("folderList");
+      list.innerHTML = "";
+
+      state.folders.forEach(folder => {
+        const row = document.createElement("div");
+        row.className = "folder" + (folder.id === state.activeFolderId ? " active" : "");
+        row.dataset.id = folder.id;
+
+        row.innerHTML = `
+          <div class="left">
+            <div class="name">${escapeHtml(folder.name)}</div>
+            <div class="count">${folderCallCount(folder.id)} calls</div>
+          </div>
+          <div class="menu">${folder.locked ? "" : "⋯"}</div>
+        `;
+
+        row.addEventListener("click", () => {
+          state.activeFolderId = folder.id;
+          saveState();
+          render();
+        });
+
+        if (!folder.locked) {
+          row.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            folderContextMenu(folder.id);
+          });
+        }
+
+        list.appendChild(row);
       });
     }
 
-    folderListEl.appendChild(row);
-  });
-}
+    function renderCalls(){
+      const folder = getFolder(state.activeFolderId);
+      $("activeFolderTitle").textContent = folder ? folder.name : "Folder";
 
-function priorityPill(priority) {
-  const p = (priority || "Medium");
-  return `<span class="pill">${p === "High" ? "🔴" : p === "Low" ? "🟢" : "🟡"} ${p}</span>`;
-}
+      const list = $("callList");
+      const q = searchText.trim().toLowerCase();
 
-function renderCalls() {
-  const folder = getFolder(state.activeFolderId);
-  activeFolderTitleEl.textContent = folder ? folder.name : "Folder";
+      let calls = state.calls
+        .filter(c => c.folderId === state.activeFolderId)
+        .filter(c => {
+          if(!q) return true;
+          return (c.customer || "").toLowerCase().includes(q) || (c.location || "").toLowerCase().includes(q);
+        })
+        .sort((a,b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt));
 
-  const calls = state.calls
-    .filter(c => c.folderId === state.activeFolderId)
-    .sort((a,b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt));
+      if(calls.length === 0){
+        list.innerHTML = `<div class="empty">No service calls here yet.</div>`;
+        return;
+      }
 
-  callListEl.innerHTML = "";
+      list.innerHTML = "";
+      calls.forEach(call => {
+        const row = document.createElement("div");
+        row.className = "call";
 
-  if (calls.length === 0) {
-    callListEl.innerHTML = `<div class="muted">No service calls in this folder yet.</div>`;
-    return;
-  }
+        row.innerHTML = `
+          <div>${priorityPill(call.priority)}</div>
 
-  calls.forEach(call => {
-    const row = document.createElement("div");
-    row.className = "call";
-    row.innerHTML = `
-      <div>${priorityPill(call.priority)}</div>
-      <div>
-        <div><strong>${escapeHtml(call.customer || "Unnamed Customer")}</strong></div>
-        <div class="muted">${escapeHtml(call.location || "No location")}</div>
-      </div>
-      <div class="muted">${escapeHtml(call.status || "New")}</div>
-      <div class="muted">${new Date(call.createdAt).toLocaleString()}</div>
-      <div style="display:flex; gap:8px; justify-content:flex-end; align-items:center;">
-        <span class="link" data-action="edit">Edit</span>
-        <span class="link" data-action="complete">Complete</span>
-      </div>
-    `;
+          <div class="nowrap">
+            <div class="strong">${escapeHtml(call.customer || "Unnamed Customer")}</div>
+            <div class="muted nowrap">${escapeHtml(call.location || "No location/notes")}</div>
+          </div>
 
-    row.querySelector('[data-action="edit"]').addEventListener("click", () => editCall(call.id));
-    row.querySelector('[data-action="complete"]').addEventListener("click", () => completeCall(call.id));
+          <div class="muted nowrap colhide">${escapeHtml(call.status || "New")}</div>
 
-    callListEl.appendChild(row);
-  });
-}
+          <div class="muted nowrap colhide">${new Date(call.createdAt).toLocaleString()}</div>
 
-function render() {
-  renderFolders();
-  renderCalls();
-}
+          <div class="muted nowrap colhide">${escapeHtml(folder?.name || "")}</div>
 
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, s => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[s]));
-}
+          <div class="links">
+            <span class="link" data-action="move">Move</span>
+            <span class="link" data-action="edit">Edit</span>
+            <span class="link" data-action="complete">Complete</span>
+          </div>
+        `;
 
-/** ---------- Folder actions ---------- */
-function addFolder() {
-  const name = prompt("Folder name? (Example: Grain, Irrigation)");
-  if (!name) return;
+        row.querySelector('[data-action="edit"]').addEventListener("click", () => editCall(call.id));
+        row.querySelector('[data-action="complete"]').addEventListener("click", () => completeCall(call.id));
+        row.querySelector('[data-action="move"]').addEventListener("click", () => moveCall(call.id));
 
-  const id = uid("f");
-  state.folders.splice(state.folders.length - 1, 0, { id, name: name.trim() }); // keep Completed last
-  state.activeFolderId = id;
-  saveState();
-  render();
-}
+        list.appendChild(row);
+      });
+    }
 
-function renameFolder(folderId) {
-  const folder = getFolder(folderId);
-  if (!folder || folder.locked) return;
+    /** ---------------- FOLDERS ---------------- */
+    function addFolder(){
+      const name = prompt("Folder name? (Example: Grain, Irrigation)");
+      if(!name) return;
+      const clean = name.trim();
+      if(!clean) return;
 
-  const name = prompt("Rename folder:", folder.name);
-  if (!name) return;
+      // prevent duplicates by name (optional)
+      if(state.folders.some(f => f.name.toLowerCase() === clean.toLowerCase())){
+        alert("That folder name already exists.");
+        return;
+      }
 
-  folder.name = name.trim();
-  saveState();
-  render();
-}
+      const id = uid("f");
+      // insert before Completed (keep Completed last)
+      const completed = state.folders.find(f => f.id === "f_completed");
+      state.folders = state.folders.filter(f => f.id !== "f_completed");
+      state.folders.push({ id, name: clean });
+      state.folders.push(completed);
 
-function deleteFolder(folderId) {
-  const folder = getFolder(folderId);
-  if (!folder || folder.locked) return;
+      state.activeFolderId = id;
+      saveState();
+      render();
+    }
 
-  const count = folderCallCount(folderId);
-  const ok = confirm(`Delete folder "${folder.name}"? (${count} calls will be moved to Completed)`);
-  if (!ok) return;
+    function renameFolder(folderId){
+      const folder = getFolder(folderId);
+      if(!folder || folder.locked) return;
 
-  // move calls to Completed
-  state.calls.forEach(c => {
-    if (c.folderId === folderId) c.folderId = "f_completed";
-  });
+      const name = prompt("Rename folder:", folder.name);
+      if(!name) return;
+      const clean = name.trim();
+      if(!clean) return;
 
-  state.folders = state.folders.filter(f => f.id !== folderId);
+      if(state.folders.some(f => f.id !== folderId && f.name.toLowerCase() === clean.toLowerCase())){
+        alert("Another folder already has that name.");
+        return;
+      }
 
-  if (state.activeFolderId === folderId) state.activeFolderId = "f_completed";
-  saveState();
-  render();
-}
+      folder.name = clean;
+      saveState();
+      render();
+    }
 
-function folderContextMenu(folderId) {
-  // simple prompt-menu (fast + no dependencies)
-  const choice = prompt("Folder options:\n1 = Rename\n2 = Delete\n(Press Cancel to exit)");
-  if (choice === "1") renameFolder(folderId);
-  if (choice === "2") deleteFolder(folderId);
-}
+    function deleteFolder(folderId){
+      const folder = getFolder(folderId);
+      if(!folder || folder.locked) return;
 
-/** ---------- Call actions ---------- */
-function addCallInActiveFolder() {
-  // Active folder auto assigned (your choice B)
-  const folderId = state.activeFolderId === "f_completed" ? "f_grain" : state.activeFolderId;
+      const count = folderCallCount(folderId);
+      const ok = confirm(`Delete folder "${folder.name}"?\n\n${count} calls will be moved to Completed.`);
+      if(!ok) return;
 
-  const customer = prompt("Customer name?");
-  if (!customer) return;
+      // move calls to Completed
+      state.calls.forEach(c => {
+        if(c.folderId === folderId) c.folderId = "f_completed";
+      });
 
-  const location = prompt("Location / notes? (optional)") || "";
-  const priority = (prompt("Priority? Type Low / Medium / High", "Medium") || "Medium").trim();
-  const status = "New";
+      state.folders = state.folders.filter(f => f.id !== folderId);
 
-  const now = Date.now();
-  state.calls.unshift({
-    id: uid("c"),
-    folderId,
-    customer: customer.trim(),
-    location: location.trim(),
-    priority: ["Low","Medium","High"].includes(priority) ? priority : "Medium",
-    status,
-    createdAt: now,
-    updatedAt: now
-  });
+      if(state.activeFolderId === folderId) state.activeFolderId = "f_completed";
 
-  saveState();
-  render();
-}
+      saveState();
+      render();
+    }
 
-function editCall(callId) {
-  const call = state.calls.find(c => c.id === callId);
-  if (!call) return;
+    function folderContextMenu(folderId){
+      const choice = prompt("Folder options:\n1 = Rename\n2 = Delete\n(Cancel to exit)");
+      if(choice === "1") renameFolder(folderId);
+      if(choice === "2") deleteFolder(folderId);
+    }
 
-  const customer = prompt("Customer name:", call.customer) ?? call.customer;
-  const location = prompt("Location / notes:", call.location) ?? call.location;
-  const priority = prompt("Priority? Low / Medium / High", call.priority) ?? call.priority;
-  const status = prompt("Status (New, Scheduled, Waiting Parts, In Progress, etc.)", call.status) ?? call.status;
+    /** ---------------- CALLS ---------------- */
+    function addCallInActiveFolder(){
+      // If user is in Completed, we don’t create new calls there
+      const targetFolderId = (state.activeFolderId === "f_completed")
+        ? (state.folders.find(f => f.id !== "f_completed")?.id || "f_completed")
+        : state.activeFolderId;
 
-  call.customer = String(customer).trim();
-  call.location = String(location).trim();
-  call.priority = ["Low","Medium","High"].includes(priority) ? priority : call.priority;
-  call.status = String(status).trim();
-  call.updatedAt = Date.now();
+      const customer = prompt("Customer name?");
+      if(!customer) return;
 
-  saveState();
-  render();
-}
+      const location = prompt("Location / notes? (optional)") || "";
+      const priority = (prompt("Priority? Type Low / Medium / High", "Medium") || "Medium").trim();
 
-function completeCall(callId) {
-  const call = state.calls.find(c => c.id === callId);
-  if (!call) return;
+      const now = Date.now();
+      state.calls.unshift({
+        id: uid("c"),
+        folderId: targetFolderId,
+        customer: customer.trim(),
+        location: location.trim(),
+        priority: ["Low","Medium","High"].includes(priority) ? priority : "Medium",
+        status: "New",
+        createdAt: now,
+        updatedAt: now
+      });
 
-  const ok = confirm(`Mark "${call.customer}" as completed? It will move to Completed.`);
-  if (!ok) return;
+      saveState();
+      render();
+    }
 
-  call.status = "Completed";
-  call.folderId = "f_completed";
-  call.updatedAt = Date.now();
+    function editCall(callId){
+      const call = state.calls.find(c => c.id === callId);
+      if(!call) return;
 
-  saveState();
-  render();
-}
+      const customer = prompt("Customer name:", call.customer) ?? call.customer;
+      const location = prompt("Location / notes:", call.location) ?? call.location;
+      const priority = prompt("Priority? Low / Medium / High", call.priority) ?? call.priority;
+      const status = prompt("Status (New, Scheduled, Waiting Parts, In Progress, etc.)", call.status) ?? call.status;
 
-/** ---------- Wire up buttons ---------- */
-document.getElementById("btnNewFolder").addEventListener("click", addFolder);
-document.getElementById("btnNewCall").addEventListener("click", addCallInActiveFolder);
+      call.customer = String(customer).trim();
+      call.location = String(location).trim();
+      const p = String(priority).trim();
+      call.priority = ["Low","Medium","High"].includes(p) ? p : call.priority;
+      call.status = String(status).trim();
+      call.updatedAt = Date.now();
 
-// First render
-render();
-</script>
+      saveState();
+      render();
+    }
+
+    function completeCall(callId){
+      const call = state.calls.find(c => c.id === callId);
+      if(!call) return;
+
+      const ok = confirm(`Mark "${call.customer}" as completed?\nIt will move to Completed.`);
+      if(!ok) return;
+
+      call.status = "Completed";
+      call.folderId = "f_completed";
+      call.updatedAt = Date.now();
+
+      saveState();
+      render();
+    }
+
+    function moveCall(callId){
+      const call = state.calls.find(c => c.id === callId);
+      if(!call) return;
+
+      const folderNames = state.folders
+        .filter(f => f.id !== "f_completed")
+        .map(f => f.name);
+
+      const current = getFolder(call.folderId)?.name || "";
+      const pick = prompt(
+        `Move call to which folder?\n\nAvailable:\n- ${folderNames.join("\n- ")}\n\nCurrent: ${current}`
+      );
+
+      if(!pick) return;
+      const clean = pick.trim().toLowerCase();
+
+      const dest = state.folders.find(f => !f.locked && f.name.toLowerCase() === clean);
+      if(!dest){
+        alert("Folder not found. (Tip: type the folder name exactly.)");
+        return;
+      }
+
+      call.folderId = dest.id;
+      call.updatedAt = Date.now();
+      saveState();
+      render();
+    }
+
+    /** ---------------- WIRE UP ---------------- */
+    $("btnNewFolder").addEventListener("click", addFolder);
+    $("btnNewCall").addEventListener("click", addCallInActiveFolder);
+
+    $("searchBox").addEventListener("input", (e) => {
+      searchText = e.target.value || "";
+      renderCalls();
+    });
+
+    // Nice PC shortcuts:
+    // N = new call, / = focus search, Esc = clear search
+    window.addEventListener("keydown", (e) => {
+      if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+
+      if (e.key.toLowerCase() === "n") addCallInActiveFolder();
+      if (e.key === "/") { e.preventDefault(); $("searchBox").focus(); }
+      if (e.key === "Escape") { $("searchBox").value = ""; searchText = ""; renderCalls(); }
+    });
+
+    render();
+  </script>
 </body>
 </html>
