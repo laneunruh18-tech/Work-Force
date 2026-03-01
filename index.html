@@ -230,5 +230,274 @@
       navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
     }
   </script>
+  <script>
+/** ========= Work Force: Folders + Calls (LocalStorage) =========
+ * - Custom folders (Grain, Irrigation, etc.)
+ * - Active folder controls where new calls go
+ * - Completing a call moves it to global Completed folder
+ */
+
+const STORAGE_KEY = "workforce_v1";
+
+const DEFAULT_STATE = {
+  folders: [
+    { id: "f_grain", name: "Grain" },
+    { id: "f_irrig", name: "Irrigation" },
+    { id: "f_completed", name: "Completed", locked: true }
+  ],
+  activeFolderId: "f_grain",
+  calls: [] // each: { id, folderId, priority, customer, location, status, createdAt, updatedAt }
+};
+
+function uid(prefix="id") {
+  return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now()}`;
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return structuredClone(DEFAULT_STATE);
+    const parsed = JSON.parse(raw);
+
+    // tiny safety merge
+    return {
+      ...structuredClone(DEFAULT_STATE),
+      ...parsed,
+      folders: parsed.folders?.length ? parsed.folders : structuredClone(DEFAULT_STATE.folders),
+      calls: Array.isArray(parsed.calls) ? parsed.calls : []
+    };
+  } catch {
+    return structuredClone(DEFAULT_STATE);
+  }
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+let state = loadState();
+
+/** ---------- Rendering ---------- */
+const folderListEl = document.getElementById("folderList");
+const callListEl = document.getElementById("callList");
+const activeFolderTitleEl = document.getElementById("activeFolderTitle");
+
+function folderCallCount(folderId) {
+  return state.calls.filter(c => c.folderId === folderId).length;
+}
+
+function getFolder(folderId) {
+  return state.folders.find(f => f.id === folderId);
+}
+
+function renderFolders() {
+  folderListEl.innerHTML = "";
+
+  state.folders.forEach(folder => {
+    const row = document.createElement("div");
+    row.className = "folder" + (folder.id === state.activeFolderId ? " active" : "");
+    row.dataset.id = folder.id;
+
+    const left = document.createElement("div");
+    left.innerHTML = `<div class="name">${folder.name}</div><div class="count">${folderCallCount(folder.id)} calls</div>`;
+
+    const right = document.createElement("div");
+    right.className = "menu";
+    right.textContent = folder.locked ? "" : "⋯";
+
+    row.appendChild(left);
+    row.appendChild(right);
+
+    row.addEventListener("click", () => {
+      state.activeFolderId = folder.id;
+      saveState();
+      render();
+    });
+
+    // Right-click menu for rename/delete (PC-friendly)
+    if (!folder.locked) {
+      row.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        folderContextMenu(folder.id);
+      });
+    }
+
+    folderListEl.appendChild(row);
+  });
+}
+
+function priorityPill(priority) {
+  const p = (priority || "Medium");
+  return `<span class="pill">${p === "High" ? "🔴" : p === "Low" ? "🟢" : "🟡"} ${p}</span>`;
+}
+
+function renderCalls() {
+  const folder = getFolder(state.activeFolderId);
+  activeFolderTitleEl.textContent = folder ? folder.name : "Folder";
+
+  const calls = state.calls
+    .filter(c => c.folderId === state.activeFolderId)
+    .sort((a,b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt));
+
+  callListEl.innerHTML = "";
+
+  if (calls.length === 0) {
+    callListEl.innerHTML = `<div class="muted">No service calls in this folder yet.</div>`;
+    return;
+  }
+
+  calls.forEach(call => {
+    const row = document.createElement("div");
+    row.className = "call";
+    row.innerHTML = `
+      <div>${priorityPill(call.priority)}</div>
+      <div>
+        <div><strong>${escapeHtml(call.customer || "Unnamed Customer")}</strong></div>
+        <div class="muted">${escapeHtml(call.location || "No location")}</div>
+      </div>
+      <div class="muted">${escapeHtml(call.status || "New")}</div>
+      <div class="muted">${new Date(call.createdAt).toLocaleString()}</div>
+      <div style="display:flex; gap:8px; justify-content:flex-end; align-items:center;">
+        <span class="link" data-action="edit">Edit</span>
+        <span class="link" data-action="complete">Complete</span>
+      </div>
+    `;
+
+    row.querySelector('[data-action="edit"]').addEventListener("click", () => editCall(call.id));
+    row.querySelector('[data-action="complete"]').addEventListener("click", () => completeCall(call.id));
+
+    callListEl.appendChild(row);
+  });
+}
+
+function render() {
+  renderFolders();
+  renderCalls();
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, s => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[s]));
+}
+
+/** ---------- Folder actions ---------- */
+function addFolder() {
+  const name = prompt("Folder name? (Example: Grain, Irrigation)");
+  if (!name) return;
+
+  const id = uid("f");
+  state.folders.splice(state.folders.length - 1, 0, { id, name: name.trim() }); // keep Completed last
+  state.activeFolderId = id;
+  saveState();
+  render();
+}
+
+function renameFolder(folderId) {
+  const folder = getFolder(folderId);
+  if (!folder || folder.locked) return;
+
+  const name = prompt("Rename folder:", folder.name);
+  if (!name) return;
+
+  folder.name = name.trim();
+  saveState();
+  render();
+}
+
+function deleteFolder(folderId) {
+  const folder = getFolder(folderId);
+  if (!folder || folder.locked) return;
+
+  const count = folderCallCount(folderId);
+  const ok = confirm(`Delete folder "${folder.name}"? (${count} calls will be moved to Completed)`);
+  if (!ok) return;
+
+  // move calls to Completed
+  state.calls.forEach(c => {
+    if (c.folderId === folderId) c.folderId = "f_completed";
+  });
+
+  state.folders = state.folders.filter(f => f.id !== folderId);
+
+  if (state.activeFolderId === folderId) state.activeFolderId = "f_completed";
+  saveState();
+  render();
+}
+
+function folderContextMenu(folderId) {
+  // simple prompt-menu (fast + no dependencies)
+  const choice = prompt("Folder options:\n1 = Rename\n2 = Delete\n(Press Cancel to exit)");
+  if (choice === "1") renameFolder(folderId);
+  if (choice === "2") deleteFolder(folderId);
+}
+
+/** ---------- Call actions ---------- */
+function addCallInActiveFolder() {
+  // Active folder auto assigned (your choice B)
+  const folderId = state.activeFolderId === "f_completed" ? "f_grain" : state.activeFolderId;
+
+  const customer = prompt("Customer name?");
+  if (!customer) return;
+
+  const location = prompt("Location / notes? (optional)") || "";
+  const priority = (prompt("Priority? Type Low / Medium / High", "Medium") || "Medium").trim();
+  const status = "New";
+
+  const now = Date.now();
+  state.calls.unshift({
+    id: uid("c"),
+    folderId,
+    customer: customer.trim(),
+    location: location.trim(),
+    priority: ["Low","Medium","High"].includes(priority) ? priority : "Medium",
+    status,
+    createdAt: now,
+    updatedAt: now
+  });
+
+  saveState();
+  render();
+}
+
+function editCall(callId) {
+  const call = state.calls.find(c => c.id === callId);
+  if (!call) return;
+
+  const customer = prompt("Customer name:", call.customer) ?? call.customer;
+  const location = prompt("Location / notes:", call.location) ?? call.location;
+  const priority = prompt("Priority? Low / Medium / High", call.priority) ?? call.priority;
+  const status = prompt("Status (New, Scheduled, Waiting Parts, In Progress, etc.)", call.status) ?? call.status;
+
+  call.customer = String(customer).trim();
+  call.location = String(location).trim();
+  call.priority = ["Low","Medium","High"].includes(priority) ? priority : call.priority;
+  call.status = String(status).trim();
+  call.updatedAt = Date.now();
+
+  saveState();
+  render();
+}
+
+function completeCall(callId) {
+  const call = state.calls.find(c => c.id === callId);
+  if (!call) return;
+
+  const ok = confirm(`Mark "${call.customer}" as completed? It will move to Completed.`);
+  if (!ok) return;
+
+  call.status = "Completed";
+  call.folderId = "f_completed";
+  call.updatedAt = Date.now();
+
+  saveState();
+  render();
+}
+
+/** ---------- Wire up buttons ---------- */
+document.getElementById("btnNewFolder").addEventListener("click", addFolder);
+document.getElementById("btnNewCall").addEventListener("click", addCallInActiveFolder);
+
+// First render
+render();
+</script>
 </body>
 </html>
