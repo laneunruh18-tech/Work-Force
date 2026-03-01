@@ -1066,19 +1066,16 @@
     }
 
     function completeCall(callId){
-      const call = state.calls.find(c => c.id === callId);
-      if(!call) return;
+  const call = state.calls.find(c => c.id === callId);
+  if(!call) return;
 
-      const ok = confirm(`Mark "${call.customer}" as completed?\nIt will move to Completed.`);
-      if(!ok) return;
+  call.status = "Completed";
+  call.folderId = "f_completed";
+  call.updatedAt = Date.now();
 
-      call.status = "Completed";
-      call.folderId = "f_completed";
-      call.updatedAt = Date.now();
-
-      saveState();
-      render();
-    }
+  saveState();
+  render();
+}
 
     /** ---------------- Wiring ---------------- */
     $("btnNewFolder").addEventListener("click", () => {
