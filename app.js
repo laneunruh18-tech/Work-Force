@@ -633,12 +633,18 @@ el.form?.addEventListener("submit", async (e) => {
   const editId = (el.editId.value || "").trim();
 
   try {
-    if (editId) {
-      const patch = { ...payload };
-delete patch.createdAt;
+  if (editId) {
 
-await updateDoc(doc(db, "calls", editId), patch);
-      selectedId = editId;
+    let patch = { ...payload };
+    delete patch.createdAt;
+    patch.updatedAt = Date.now();
+
+    Object.keys(patch).forEach(k => {
+      if (patch[k] === undefined) delete patch[k];
+    });
+
+    await updateDoc(doc(db, "calls", editId), patch);
+    selectedId = editId;
     } else {
       // Don’t send undefined fields
       const clean = { ...payload };
