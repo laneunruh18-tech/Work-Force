@@ -12,6 +12,31 @@
 
 <body>
   <div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">Work Force</div>
+      <button id="btnNewFolder" class="btn">+ New Folder</button>
+    </div>
+
+    <div id="folderList" class="folder-list"></div>
+  </aside>
+
+  <main class="main">
+    <div class="main-header">
+      <div>
+        <div id="activeFolderTitle" class="title">Folder</div>
+        <div id="activeFolderSubtitle" class="subtitle">Add calls fast. Completed calls move out automatically.</div>
+      </div>
+
+      <div class="actions">
+        <button id="btnNewCall" class="btn primary">+ New Service Call</button>
+      </div>
+    </div>
+
+    <div id="callList" class="call-list"></div>
+  </main>
+</div>
+  <div class="app">
     <!-- Top Bar -->
     <header class="topbar">
       <div class="brand">
