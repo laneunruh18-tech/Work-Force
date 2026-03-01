@@ -19,6 +19,9 @@
       --muted:rgba(0,0,0,.6);
       --shadow:0 10px 24px rgba(0,0,0,.06);
       --radius:14px;
+
+      --danger:#c62828;
+      --ok:#1b5e20;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -33,6 +36,7 @@
       height:100vh;
       display:flex;
       overflow:hidden;
+      position:relative;
     }
 
     /* Sidebar */
@@ -62,7 +66,7 @@
       padding:10px 12px;
       border-radius:12px;
       cursor:pointer;
-      font-weight:600;
+      font-weight:700;
     }
     .btn:hover{filter:brightness(0.98)}
     .btn:active{transform:translateY(1px)}
@@ -70,6 +74,16 @@
       background:#111;
       color:#fff;
       border-color:#111;
+    }
+    .btn.danger{
+      background:var(--danger);
+      color:#fff;
+      border-color:var(--danger);
+    }
+    .btn.ghost{
+      background:#fff;
+      border-color:var(--border);
+      color:#111;
     }
     .folder-list{
       display:flex;
@@ -101,7 +115,7 @@
       min-width:0;
     }
     .folder .name{
-      font-weight:800;
+      font-weight:900;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
@@ -118,7 +132,19 @@
     .hint{
       font-size:12px;
       color:var(--muted);
-      line-height:1.4;
+      line-height:1.45;
+    }
+    .kbd{
+      display:inline-block;
+      border:1px solid var(--border);
+      border-bottom-width:2px;
+      padding:2px 6px;
+      border-radius:7px;
+      background:#fff;
+      font-weight:800;
+      font-size:11px;
+      color:rgba(0,0,0,.8);
+      margin:0 2px;
     }
 
     /* Main */
@@ -143,7 +169,7 @@
     }
     .titleblock .title{
       font-size:22px;
-      font-weight:900;
+      font-weight:1000;
       margin:0;
     }
     .titleblock .subtitle{
@@ -157,13 +183,13 @@
       align-items:center;
     }
     .search{
-      width:280px;
-      max-width:36vw;
+      width:320px;
+      max-width:40vw;
       padding:10px 12px;
       border-radius:12px;
       border:1px solid var(--border);
       outline:none;
-      font-weight:600;
+      font-weight:700;
     }
 
     /* Calls list */
@@ -178,7 +204,7 @@
     }
     .call{
       display:grid;
-      grid-template-columns: 130px 1.2fr 1fr 160px 170px 150px;
+      grid-template-columns: 140px 1.2fr 1fr 160px 160px 170px;
       gap:10px;
       align-items:center;
       padding:12px 14px;
@@ -195,11 +221,11 @@
       border-radius:999px;
       border:1px solid var(--border);
       font-size:12px;
-      font-weight:800;
+      font-weight:900;
       width:max-content;
     }
     .muted{color:var(--muted)}
-    .strong{font-weight:900}
+    .strong{font-weight:1000}
     .nowrap{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
     .links{
       display:flex;
@@ -210,17 +236,130 @@
     .link{
       cursor:pointer;
       text-decoration:underline;
-      font-weight:800;
+      font-weight:900;
       color:#111;
     }
     .link:hover{opacity:.8}
+    .tag{
+      font-size:12px;
+      font-weight:900;
+      color:rgba(0,0,0,.8);
+    }
+
+    /* Drawer (real form) */
+    .backdrop{
+      position:absolute;
+      inset:0;
+      background:rgba(0,0,0,.25);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .18s ease;
+    }
+    .backdrop.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+    .drawer{
+      position:absolute;
+      top:0; right:0;
+      height:100%;
+      width:440px;
+      max-width:92vw;
+      background:#fff;
+      border-left:1px solid var(--border);
+      box-shadow:var(--shadow);
+      transform:translateX(102%);
+      transition:transform .22s ease;
+      display:flex;
+      flex-direction:column;
+    }
+    .drawer.show{
+      transform:translateX(0);
+    }
+    .drawer-header{
+      padding:14px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .drawer-title{
+      font-size:18px;
+      font-weight:1000;
+      margin:0;
+    }
+    .drawer-subtitle{
+      margin-top:4px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.35;
+    }
+    .drawer-body{
+      padding:14px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    label{
+      font-size:12px;
+      font-weight:900;
+      color:rgba(0,0,0,.75);
+    }
+    input, select, textarea{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px 12px;
+      font-weight:700;
+      outline:none;
+      font-family:inherit;
+      font-size:14px;
+      background:#fff;
+    }
+    textarea{
+      min-height:92px;
+      resize:vertical;
+      font-weight:650;
+    }
+    .readonly{
+      background:#f6f6f6;
+      color:rgba(0,0,0,.75);
+    }
+    .drawer-footer{
+      border-top:1px solid var(--border);
+      padding:12px 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      background:#fff;
+    }
+    .drawer-footer .left, .drawer-footer .right{
+      display:flex; gap:10px; align-items:center;
+    }
+    .helper{
+      font-size:12px;
+      color:var(--muted);
+    }
 
     /* Small screens fallback (still desktop-first) */
     @media (max-width: 980px){
       .sidebar{width:260px}
-      .call{grid-template-columns: 120px 1fr 1fr; grid-auto-rows:auto}
+      .call{grid-template-columns: 140px 1fr 1fr; grid-auto-rows:auto}
       .call .colhide{display:none}
       .search{display:none}
+      .drawer{width:92vw}
     }
   </style>
 </head>
@@ -234,8 +373,13 @@
       </div>
 
       <div class="hint">
-        💡 <b>PC tip:</b> Right-click a folder to rename/delete.<br/>
-        New service calls automatically go into the folder you’re viewing.
+        💡 PC shortcuts:
+        <span class="kbd">N</span> new call,
+        <span class="kbd">/</span> search,
+        <span class="kbd">Esc</span> close,
+        <span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> save.
+        <br/>
+        Right-click a folder to rename/delete.
       </div>
 
       <div class="folder-list" id="folderList"></div>
@@ -246,30 +390,119 @@
         <div class="titleblock">
           <div class="title" id="activeFolderTitle">Folder</div>
           <div class="subtitle" id="activeFolderSubtitle">
-            Add calls fast. Mark Complete to move into Completed automatically.
+            New calls go into the open folder. Completed calls move out automatically.
           </div>
         </div>
 
         <div class="actions">
-          <input class="search" id="searchBox" placeholder="Search customer / location..." />
+          <input class="search" id="searchBox" placeholder="Search customer / location / phone..." />
           <button class="btn primary" id="btnNewCall">+ New Service Call</button>
         </div>
       </div>
 
       <div class="listwrap" id="callList"></div>
     </main>
+
+    <!-- Backdrop + Drawer -->
+    <div class="backdrop" id="backdrop" aria-hidden="true"></div>
+
+    <section class="drawer" id="drawer" aria-hidden="true">
+      <div class="drawer-header">
+        <div>
+          <div class="drawer-title" id="drawerTitle">New Service Call</div>
+          <div class="drawer-subtitle" id="drawerSubtitle">
+            Fill this out fast. Folder auto-selects from the left sidebar.
+          </div>
+        </div>
+        <button class="btn ghost" id="btnCloseDrawer">Close</button>
+      </div>
+
+      <div class="drawer-body">
+        <div class="field">
+          <label for="f_customer">Customer Name *</label>
+          <input id="f_customer" autocomplete="off" placeholder="Smith Farm" />
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="f_phone">Phone</label>
+            <input id="f_phone" autocomplete="off" placeholder="(555) 555-5555" />
+          </div>
+          <div class="field">
+            <label for="f_tech">Technician</label>
+            <input id="f_tech" autocomplete="off" placeholder="Jake" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f_location">Location / Machine / Notes (short)</label>
+          <input id="f_location" autocomplete="off" placeholder="West bin site, dryer #2, etc." />
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="f_folder">Folder</label>
+            <input id="f_folder" class="readonly" readonly />
+          </div>
+          <div class="field">
+            <label for="f_scheduled">Scheduled Date/Time</label>
+            <input id="f_scheduled" type="datetime-local" />
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="f_priority">Priority</label>
+            <select id="f_priority">
+              <option>Low</option>
+              <option selected>Medium</option>
+              <option>High</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f_status">Status</label>
+            <select id="f_status">
+              <option selected>New</option>
+              <option>Scheduled</option>
+              <option>In Progress</option>
+              <option>Waiting on Parts</option>
+              <option>Waiting on Customer</option>
+              <option>Completed</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f_details">Details / Full Notes</label>
+          <textarea id="f_details" placeholder="Write the full issue, parts needed, what customer said, etc."></textarea>
+        </div>
+
+        <div class="helper">
+          Tip: Use <b>Tab</b> to move field-to-field. Use <b>Ctrl + Enter</b> to save.
+        </div>
+      </div>
+
+      <div class="drawer-footer">
+        <div class="left">
+          <button class="btn danger" id="btnDeleteCall" style="display:none;">Delete</button>
+        </div>
+        <div class="right">
+          <button class="btn" id="btnCancel">Cancel</button>
+          <button class="btn primary" id="btnSave">Save</button>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script>
     /*****************************************************************
-     * Work Force (PC-first) - Folders + Service Calls (LocalStorage)
-     * - Custom folders (named by you)
-     * - Each call belongs to ONE folder
+     * Work Force (PC-first)
+     * - Custom folders
+     * - Real form drawer for New/Edit
      * - New call auto goes into ACTIVE folder
-     * - Completing a call moves it to global Completed folder
+     * - Completing moves to Completed folder
      *****************************************************************/
-
-    const STORAGE_KEY = "workforce_v1";
+    const STORAGE_KEY = "workforce_v2";
 
     const DEFAULT_STATE = {
       folders: [
@@ -280,13 +513,15 @@
       activeFolderId: "f_grain",
       calls: []
       // call shape:
-      // { id, folderId, priority, customer, location, status, createdAt, updatedAt }
+      // { id, folderId, customer, phone, tech, location, details, priority, status, scheduledAt, createdAt, updatedAt }
     };
 
     const $ = (id) => document.getElementById(id);
 
     let state = loadState();
     let searchText = "";
+    let drawerMode = "new"; // "new" | "edit"
+    let editingCallId = null;
 
     function uid(prefix="id") {
       return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now()}`;
@@ -298,7 +533,6 @@
         if(!raw) return structuredClone(DEFAULT_STATE);
         const parsed = JSON.parse(raw);
 
-        // safety merge
         const merged = {
           ...structuredClone(DEFAULT_STATE),
           ...parsed,
@@ -306,13 +540,13 @@
           calls: Array.isArray(parsed.calls) ? parsed.calls : []
         };
 
-        // ensure Completed exists
+        // ensure Completed exists + last
         if(!merged.folders.find(f => f.id === "f_completed")){
           merged.folders.push({ id:"f_completed", name:"Completed", locked:true });
         }
-        // keep Completed last
-        merged.folders = merged.folders.filter(f => f.id !== "f_completed").concat(merged.folders.find(f => f.id === "f_completed"));
-        // ensure active folder
+        const completed = merged.folders.find(f => f.id === "f_completed");
+        merged.folders = merged.folders.filter(f => f.id !== "f_completed").concat(completed);
+
         if(!merged.folders.find(f => f.id === merged.activeFolderId)){
           merged.activeFolderId = merged.folders[0]?.id || "f_completed";
         }
@@ -341,10 +575,31 @@
       return state.calls.filter(c => c.folderId === folderId).length;
     }
 
+    function normalizePhone(phone){
+      // Keep digits and +; make tel: work reliably
+      const p = String(phone || "").trim();
+      const cleaned = p.replace(/[^0-9+]/g, "");
+      return cleaned;
+    }
+
     function priorityPill(priority){
       const p = priority || "Medium";
       const icon = p === "High" ? "🔴" : p === "Low" ? "🟢" : "🟡";
       return `<span class="pill">${icon} ${escapeHtml(p)}</span>`;
+    }
+
+    function statusTag(status){
+      const s = status || "New";
+      return `<span class="tag">${escapeHtml(s)}</span>`;
+    }
+
+    function fmtWhen(ts){
+      if(!ts) return "";
+      try{
+        const d = new Date(ts);
+        if(Number.isNaN(d.getTime())) return "";
+        return d.toLocaleString();
+      }catch{ return ""; }
     }
 
     /** ---------------- RENDER ---------------- */
@@ -398,7 +653,8 @@
         .filter(c => c.folderId === state.activeFolderId)
         .filter(c => {
           if(!q) return true;
-          return (c.customer || "").toLowerCase().includes(q) || (c.location || "").toLowerCase().includes(q);
+          const hay = `${c.customer||""} ${c.location||""} ${c.phone||""} ${c.tech||""}`.toLowerCase();
+          return hay.includes(q);
         })
         .sort((a,b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt));
 
@@ -412,30 +668,43 @@
         const row = document.createElement("div");
         row.className = "call";
 
+        const phoneClean = normalizePhone(call.phone);
+        const phoneHtml = phoneClean
+          ? `<a class="link" href="tel:${escapeHtml(phoneClean)}">${escapeHtml(call.phone)}</a>`
+          : `<span class="muted">No phone</span>`;
+
+        const scheduled = call.scheduledAt ? fmtWhen(call.scheduledAt) : "";
+
         row.innerHTML = `
           <div>${priorityPill(call.priority)}</div>
 
           <div class="nowrap">
-            <div class="strong">${escapeHtml(call.customer || "Unnamed Customer")}</div>
+            <div class="strong nowrap">${escapeHtml(call.customer || "Unnamed Customer")}</div>
             <div class="muted nowrap">${escapeHtml(call.location || "No location/notes")}</div>
           </div>
 
-          <div class="muted nowrap colhide">${escapeHtml(call.status || "New")}</div>
+          <div class="nowrap colhide">
+            ${phoneHtml}
+            <div class="muted nowrap">${escapeHtml(call.tech || "No tech")}</div>
+          </div>
 
-          <div class="muted nowrap colhide">${new Date(call.createdAt).toLocaleString()}</div>
+          <div class="nowrap colhide">
+            ${statusTag(call.status)}
+            <div class="muted nowrap">${scheduled ? "📅 " + escapeHtml(scheduled) : "No schedule"}</div>
+          </div>
 
-          <div class="muted nowrap colhide">${escapeHtml(folder?.name || "")}</div>
+          <div class="muted nowrap colhide">
+            Updated: ${fmtWhen(call.updatedAt || call.createdAt)}
+          </div>
 
           <div class="links">
-            <span class="link" data-action="move">Move</span>
             <span class="link" data-action="edit">Edit</span>
             <span class="link" data-action="complete">Complete</span>
           </div>
         `;
 
-        row.querySelector('[data-action="edit"]').addEventListener("click", () => editCall(call.id));
+        row.querySelector('[data-action="edit"]').addEventListener("click", () => openEditDrawer(call.id));
         row.querySelector('[data-action="complete"]').addEventListener("click", () => completeCall(call.id));
-        row.querySelector('[data-action="move"]').addEventListener("click", () => moveCall(call.id));
 
         list.appendChild(row);
       });
@@ -448,14 +717,12 @@
       const clean = name.trim();
       if(!clean) return;
 
-      // prevent duplicates by name (optional)
       if(state.folders.some(f => f.name.toLowerCase() === clean.toLowerCase())){
         alert("That folder name already exists.");
         return;
       }
 
       const id = uid("f");
-      // insert before Completed (keep Completed last)
       const completed = state.folders.find(f => f.id === "f_completed");
       state.folders = state.folders.filter(f => f.id !== "f_completed");
       state.folders.push({ id, name: clean });
@@ -493,7 +760,6 @@
       const ok = confirm(`Delete folder "${folder.name}"?\n\n${count} calls will be moved to Completed.`);
       if(!ok) return;
 
-      // move calls to Completed
       state.calls.forEach(c => {
         if(c.folderId === folderId) c.folderId = "f_completed";
       });
@@ -512,55 +778,206 @@
       if(choice === "2") deleteFolder(folderId);
     }
 
-    /** ---------------- CALLS ---------------- */
-    function addCallInActiveFolder(){
-      // If user is in Completed, we don’t create new calls there
-      const targetFolderId = (state.activeFolderId === "f_completed")
-        ? (state.folders.find(f => f.id !== "f_completed")?.id || "f_completed")
-        : state.activeFolderId;
-
-      const customer = prompt("Customer name?");
-      if(!customer) return;
-
-      const location = prompt("Location / notes? (optional)") || "";
-      const priority = (prompt("Priority? Type Low / Medium / High", "Medium") || "Medium").trim();
-
-      const now = Date.now();
-      state.calls.unshift({
-        id: uid("c"),
-        folderId: targetFolderId,
-        customer: customer.trim(),
-        location: location.trim(),
-        priority: ["Low","Medium","High"].includes(priority) ? priority : "Medium",
-        status: "New",
-        createdAt: now,
-        updatedAt: now
-      });
-
-      saveState();
-      render();
+    /** ---------------- DRAWER (REAL FORM) ---------------- */
+    function showDrawer(){
+      $("drawer").classList.add("show");
+      $("backdrop").classList.add("show");
+      $("drawer").setAttribute("aria-hidden", "false");
+      $("backdrop").setAttribute("aria-hidden", "false");
     }
 
-    function editCall(callId){
+    function hideDrawer(){
+      $("drawer").classList.remove("show");
+      $("backdrop").classList.remove("show");
+      $("drawer").setAttribute("aria-hidden", "true");
+      $("backdrop").setAttribute("aria-hidden", "true");
+      editingCallId = null;
+      drawerMode = "new";
+      setDeleteVisible(false);
+    }
+
+    function setDeleteVisible(show){
+      $("btnDeleteCall").style.display = show ? "inline-flex" : "none";
+    }
+
+    function setDrawerHeader(){
+      const folder = getFolder(getTargetFolderIdForNew());
+      const folderName = folder ? folder.name : "Folder";
+      $("f_folder").value = folderName;
+
+      if(drawerMode === "new"){
+        $("drawerTitle").textContent = "New Service Call";
+        $("drawerSubtitle").textContent = `Adding into "${folderName}".`;
+      }else{
+        $("drawerTitle").textContent = "Edit Service Call";
+        $("drawerSubtitle").textContent = `Editing call in "${folderName}".`;
+      }
+    }
+
+    function resetForm(){
+      $("f_customer").value = "";
+      $("f_phone").value = "";
+      $("f_tech").value = "";
+      $("f_location").value = "";
+      $("f_details").value = "";
+      $("f_priority").value = "Medium";
+      $("f_status").value = "New";
+      $("f_scheduled").value = "";
+    }
+
+    function focusFirstField(){
+      setTimeout(() => $("f_customer").focus(), 0);
+    }
+
+    function getTargetFolderIdForNew(){
+      // Don’t create new calls directly inside Completed
+      if(state.activeFolderId === "f_completed"){
+        return state.folders.find(f => f.id !== "f_completed")?.id || "f_completed";
+      }
+      return state.activeFolderId;
+    }
+
+    function openNewDrawer(){
+      drawerMode = "new";
+      editingCallId = null;
+      setDeleteVisible(false);
+      resetForm();
+      setDrawerHeader();
+      showDrawer();
+      focusFirstField();
+    }
+
+    function openEditDrawer(callId){
       const call = state.calls.find(c => c.id === callId);
       if(!call) return;
 
-      const customer = prompt("Customer name:", call.customer) ?? call.customer;
-      const location = prompt("Location / notes:", call.location) ?? call.location;
-      const priority = prompt("Priority? Low / Medium / High", call.priority) ?? call.priority;
-      const status = prompt("Status (New, Scheduled, Waiting Parts, In Progress, etc.)", call.status) ?? call.status;
+      drawerMode = "edit";
+      editingCallId = callId;
+      setDeleteVisible(true);
 
-      call.customer = String(customer).trim();
-      call.location = String(location).trim();
-      const p = String(priority).trim();
-      call.priority = ["Low","Medium","High"].includes(p) ? p : call.priority;
-      call.status = String(status).trim();
-      call.updatedAt = Date.now();
+      // Set folder display to the call’s current folder
+      const folder = getFolder(call.folderId);
+      $("f_folder").value = folder ? folder.name : "";
 
-      saveState();
-      render();
+      $("drawerTitle").textContent = "Edit Service Call";
+      $("drawerSubtitle").textContent = `Editing call in "${folder ? folder.name : "Folder"}".`;
+
+      $("f_customer").value = call.customer || "";
+      $("f_phone").value = call.phone || "";
+      $("f_tech").value = call.tech || "";
+      $("f_location").value = call.location || "";
+      $("f_details").value = call.details || "";
+      $("f_priority").value = call.priority || "Medium";
+      $("f_status").value = call.status || "New";
+
+      // scheduledAt -> datetime-local format
+      if(call.scheduledAt){
+        const d = new Date(call.scheduledAt);
+        if(!Number.isNaN(d.getTime())){
+          $("f_scheduled").value = toDatetimeLocal(d);
+        }else{
+          $("f_scheduled").value = "";
+        }
+      }else{
+        $("f_scheduled").value = "";
+      }
+
+      showDrawer();
+      focusFirstField();
     }
 
+    function toDatetimeLocal(date){
+      const pad = (n) => String(n).padStart(2, "0");
+      const yyyy = date.getFullYear();
+      const mm = pad(date.getMonth()+1);
+      const dd = pad(date.getDate());
+      const hh = pad(date.getHours());
+      const mi = pad(date.getMinutes());
+      return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+    }
+
+    function parseDatetimeLocal(value){
+      const v = String(value || "").trim();
+      if(!v) return null;
+      const d = new Date(v);
+      if(Number.isNaN(d.getTime())) return null;
+      return d.getTime();
+    }
+
+    function saveFromForm(){
+      const customer = $("f_customer").value.trim();
+      if(!customer){
+        alert("Customer name is required.");
+        $("f_customer").focus();
+        return;
+      }
+
+      const now = Date.now();
+      const payload = {
+        customer,
+        phone: $("f_phone").value.trim(),
+        tech: $("f_tech").value.trim(),
+        location: $("f_location").value.trim(),
+        details: $("f_details").value.trim(),
+        priority: $("f_priority").value,
+        status: $("f_status").value,
+        scheduledAt: parseDatetimeLocal($("f_scheduled").value),
+        updatedAt: now
+      };
+
+      if(drawerMode === "new"){
+        const folderId = getTargetFolderIdForNew();
+
+        const call = {
+          id: uid("c"),
+          folderId,
+          ...payload,
+          createdAt: now
+        };
+
+        // If user sets status to Completed while creating, move to completed automatically
+        if(call.status === "Completed"){
+          call.folderId = "f_completed";
+        }
+
+        state.calls.unshift(call);
+        saveState();
+        render();
+
+        hideDrawer();
+      }else{
+        const call = state.calls.find(c => c.id === editingCallId);
+        if(!call) return;
+
+        // Keep folderId unless status becomes Completed
+        Object.assign(call, payload);
+
+        if(call.status === "Completed"){
+          call.folderId = "f_completed";
+        }
+
+        saveState();
+        render();
+
+        hideDrawer();
+      }
+    }
+
+    function deleteCurrentCall(){
+      if(!editingCallId) return;
+      const call = state.calls.find(c => c.id === editingCallId);
+      if(!call) return;
+
+      const ok = confirm(`Delete "${call.customer}"? This cannot be undone.`);
+      if(!ok) return;
+
+      state.calls = state.calls.filter(c => c.id !== editingCallId);
+      saveState();
+      render();
+      hideDrawer();
+    }
+
+    /** ---------------- CALLS ---------------- */
     function completeCall(callId){
       const call = state.calls.find(c => c.id === callId);
       if(!call) return;
@@ -576,53 +993,69 @@
       render();
     }
 
-    function moveCall(callId){
-      const call = state.calls.find(c => c.id === callId);
-      if(!call) return;
-
-      const folderNames = state.folders
-        .filter(f => f.id !== "f_completed")
-        .map(f => f.name);
-
-      const current = getFolder(call.folderId)?.name || "";
-      const pick = prompt(
-        `Move call to which folder?\n\nAvailable:\n- ${folderNames.join("\n- ")}\n\nCurrent: ${current}`
-      );
-
-      if(!pick) return;
-      const clean = pick.trim().toLowerCase();
-
-      const dest = state.folders.find(f => !f.locked && f.name.toLowerCase() === clean);
-      if(!dest){
-        alert("Folder not found. (Tip: type the folder name exactly.)");
-        return;
-      }
-
-      call.folderId = dest.id;
-      call.updatedAt = Date.now();
-      saveState();
-      render();
-    }
-
     /** ---------------- WIRE UP ---------------- */
     $("btnNewFolder").addEventListener("click", addFolder);
-    $("btnNewCall").addEventListener("click", addCallInActiveFolder);
+    $("btnNewCall").addEventListener("click", openNewDrawer);
 
     $("searchBox").addEventListener("input", (e) => {
       searchText = e.target.value || "";
       renderCalls();
     });
 
-    // Nice PC shortcuts:
-    // N = new call, / = focus search, Esc = clear search
-    window.addEventListener("keydown", (e) => {
-      if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+    $("btnCloseDrawer").addEventListener("click", hideDrawer);
+    $("btnCancel").addEventListener("click", hideDrawer);
+    $("btnSave").addEventListener("click", saveFromForm);
+    $("btnDeleteCall").addEventListener("click", deleteCurrentCall);
+    $("backdrop").addEventListener("click", hideDrawer);
 
-      if (e.key.toLowerCase() === "n") addCallInActiveFolder();
-      if (e.key === "/") { e.preventDefault(); $("searchBox").focus(); }
-      if (e.key === "Escape") { $("searchBox").value = ""; searchText = ""; renderCalls(); }
+    // Keyboard shortcuts
+    window.addEventListener("keydown", (e) => {
+      const isTyping = e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT");
+      const drawerOpen = $("drawer").classList.contains("show");
+
+      // Ctrl+Enter save (when drawer open)
+      if(drawerOpen && e.ctrlKey && e.key === "Enter"){
+        e.preventDefault();
+        saveFromForm();
+        return;
+      }
+
+      if(e.key === "Escape"){
+        if(drawerOpen){
+          e.preventDefault();
+          hideDrawer();
+          return;
+        }
+        // If not in drawer, clear search
+        if(!drawerOpen){
+          $("searchBox").value = "";
+          searchText = "";
+          renderCalls();
+        }
+      }
+
+      if(!drawerOpen && !isTyping){
+        if(e.key.toLowerCase() === "n"){
+          openNewDrawer();
+        }
+        if(e.key === "/"){
+          e.preventDefault();
+          $("searchBox").focus();
+        }
+      }
     });
 
+    // When active folder changes, update drawer folder label if drawer is open and in "new"
+    const _origRenderFolders = renderFolders;
+    function renderFolders(){
+      _origRenderFolders();
+      const drawerOpen = $("drawer").classList.contains("show");
+      if(drawerOpen && drawerMode === "new"){
+        setDrawerHeader();
+      }
+    }
+
+    // Initial render
     render();
   </script>
 </body>
