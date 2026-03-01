@@ -867,8 +867,6 @@
       if(!folder || folder.locked) return;
 
       const count = folderCallCount(folder.id);
-      const ok = confirm(`Delete "${folder.name}"?\n\n${count} calls will be moved to Completed.`);
-      if(!ok) return;
 
       // move calls
       state.calls.forEach(c => {
