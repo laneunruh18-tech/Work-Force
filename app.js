@@ -634,7 +634,10 @@ el.form?.addEventListener("submit", async (e) => {
 
   try {
     if (editId) {
-      await updateDoc(doc(db, "calls", editId), { ...payload, createdAt: undefined });
+      const patch = { ...payload };
+delete patch.createdAt;
+
+await updateDoc(doc(db, "calls", editId), patch);
       selectedId = editId;
     } else {
       // Don’t send undefined fields
