@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Work Force</title>
 
-  <!-- Helps Safari/iPad not cling to old HTML too hard -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -21,7 +20,6 @@
       --radius:14px;
 
       --danger:#c62828;
-      --ok:#1b5e20;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -66,7 +64,7 @@
       padding:10px 12px;
       border-radius:12px;
       cursor:pointer;
-      font-weight:700;
+      font-weight:800;
     }
     .btn:hover{filter:brightness(0.98)}
     .btn:active{transform:translateY(1px)}
@@ -85,6 +83,25 @@
       border-color:var(--border);
       color:#111;
     }
+
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+    .kbd{
+      display:inline-block;
+      border:1px solid var(--border);
+      border-bottom-width:2px;
+      padding:2px 6px;
+      border-radius:7px;
+      background:#fff;
+      font-weight:900;
+      font-size:11px;
+      color:rgba(0,0,0,.8);
+      margin:0 2px;
+    }
+
     .folder-list{
       display:flex;
       flex-direction:column;
@@ -106,16 +123,16 @@
     }
     .folder.active{
       outline:2px solid rgba(0,0,0,.12);
-      background:#fff;
     }
     .folder .left{
       display:flex;
       flex-direction:column;
       gap:2px;
       min-width:0;
+      flex:1;
     }
     .folder .name{
-      font-weight:900;
+      font-weight:1000;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
@@ -124,28 +141,23 @@
       font-size:12px;
       color:var(--muted);
     }
-    .folder .menu{
-      color:var(--muted);
-      font-weight:900;
-      padding:0 6px;
-    }
-    .hint{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.45;
-    }
-    .kbd{
-      display:inline-block;
+    .iconbtn{
       border:1px solid var(--border);
-      border-bottom-width:2px;
-      padding:2px 6px;
-      border-radius:7px;
       background:#fff;
-      font-weight:800;
-      font-size:11px;
-      color:rgba(0,0,0,.8);
-      margin:0 2px;
+      width:34px;
+      height:34px;
+      border-radius:12px;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:1000;
+      color:rgba(0,0,0,.65);
+      flex:0 0 auto;
     }
+    .iconbtn:hover{filter:brightness(0.98)}
+    .iconbtn:active{transform:translateY(1px)}
+    .iconbtn[disabled]{opacity:.45; cursor:not-allowed}
 
     /* Main */
     .main{
@@ -169,7 +181,7 @@
     }
     .titleblock .title{
       font-size:22px;
-      font-weight:1000;
+      font-weight:1100;
       margin:0;
     }
     .titleblock .subtitle{
@@ -189,19 +201,12 @@
       border-radius:12px;
       border:1px solid var(--border);
       outline:none;
-      font-weight:700;
+      font-weight:800;
     }
 
     /* Calls list */
-    .listwrap{
-      flex:1;
-      overflow:auto;
-      padding-right:6px;
-    }
-    .empty{
-      color:var(--muted);
-      padding:16px;
-    }
+    .listwrap{flex:1; overflow:auto; padding-right:6px;}
+    .empty{color:var(--muted); padding:16px;}
     .call{
       display:grid;
       grid-template-columns: 140px 1.2fr 1fr 160px 160px 170px;
@@ -221,32 +226,23 @@
       border-radius:999px;
       border:1px solid var(--border);
       font-size:12px;
-      font-weight:900;
+      font-weight:1000;
       width:max-content;
     }
     .muted{color:var(--muted)}
-    .strong{font-weight:1000}
+    .strong{font-weight:1100}
     .nowrap{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-    .links{
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
-      flex-wrap:wrap;
-    }
+    .links{display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;}
     .link{
       cursor:pointer;
       text-decoration:underline;
-      font-weight:900;
+      font-weight:1000;
       color:#111;
     }
     .link:hover{opacity:.8}
-    .tag{
-      font-size:12px;
-      font-weight:900;
-      color:rgba(0,0,0,.8);
-    }
+    .tag{font-size:12px; font-weight:1000; color:rgba(0,0,0,.8);}
 
-    /* Drawer (real form) */
+    /* Backdrop + Drawer */
     .backdrop{
       position:absolute;
       inset:0;
@@ -259,6 +255,7 @@
       opacity:1;
       pointer-events:auto;
     }
+
     .drawer{
       position:absolute;
       top:0; right:0;
@@ -273,9 +270,7 @@
       display:flex;
       flex-direction:column;
     }
-    .drawer.show{
-      transform:translateX(0);
-    }
+    .drawer.show{transform:translateX(0)}
     .drawer-header{
       padding:14px;
       border-bottom:1px solid var(--border);
@@ -284,57 +279,14 @@
       justify-content:space-between;
       gap:10px;
     }
-    .drawer-title{
-      font-size:18px;
-      font-weight:1000;
-      margin:0;
-    }
-    .drawer-subtitle{
-      margin-top:4px;
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.35;
-    }
+    .drawer-title{font-size:18px; font-weight:1100; margin:0;}
+    .drawer-subtitle{margin-top:4px; font-size:12px; color:var(--muted); line-height:1.35;}
     .drawer-body{
       padding:14px;
       overflow:auto;
       display:flex;
       flex-direction:column;
       gap:12px;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-    label{
-      font-size:12px;
-      font-weight:900;
-      color:rgba(0,0,0,.75);
-    }
-    input, select, textarea{
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:10px 12px;
-      font-weight:700;
-      outline:none;
-      font-family:inherit;
-      font-size:14px;
-      background:#fff;
-    }
-    textarea{
-      min-height:92px;
-      resize:vertical;
-      font-weight:650;
-    }
-    .readonly{
-      background:#f6f6f6;
-      color:rgba(0,0,0,.75);
     }
     .drawer-footer{
       border-top:1px solid var(--border);
@@ -345,15 +297,71 @@
       gap:10px;
       background:#fff;
     }
-    .drawer-footer .left, .drawer-footer .right{
-      display:flex; gap:10px; align-items:center;
-    }
-    .helper{
-      font-size:12px;
-      color:var(--muted);
-    }
+    .drawer-footer .left, .drawer-footer .right{display:flex; gap:10px; align-items:center;}
 
-    /* Small screens fallback (still desktop-first) */
+    .grid{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    .field{display:flex; flex-direction:column; gap:6px;}
+    label{font-size:12px; font-weight:1000; color:rgba(0,0,0,.75);}
+    input, select, textarea{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px 12px;
+      font-weight:800;
+      outline:none;
+      font-family:inherit;
+      font-size:14px;
+      background:#fff;
+    }
+    textarea{min-height:92px; resize:vertical; font-weight:700;}
+    .readonly{background:#f6f6f6; color:rgba(0,0,0,.75);}
+
+    /* Folder modal (real form) */
+    .modal{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      pointer-events:none;
+    }
+    .modal-card{
+      width:520px;
+      max-width:92vw;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      transform:translateY(10px);
+      opacity:0;
+      transition:opacity .18s ease, transform .18s ease;
+      pointer-events:none;
+    }
+    .modal.show .modal-card{
+      opacity:1;
+      transform:translateY(0);
+      pointer-events:auto;
+    }
+    .modal-header{
+      padding:14px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .modal-title{font-size:16px; font-weight:1100; margin:0;}
+    .modal-subtitle{margin-top:4px; font-size:12px; color:var(--muted); line-height:1.35;}
+    .modal-body{padding:14px; display:flex; flex-direction:column; gap:12px;}
+    .modal-footer{
+      padding:12px 14px;
+      border-top:1px solid var(--border);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+    .helper{font-size:12px; color:var(--muted);}
+
     @media (max-width: 980px){
       .sidebar{width:260px}
       .call{grid-template-columns: 140px 1fr 1fr; grid-auto-rows:auto}
@@ -373,13 +381,11 @@
       </div>
 
       <div class="hint">
-        💡 PC shortcuts:
+        PC shortcuts:
         <span class="kbd">N</span> new call,
         <span class="kbd">/</span> search,
         <span class="kbd">Esc</span> close,
         <span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> save.
-        <br/>
-        Right-click a folder to rename/delete.
       </div>
 
       <div class="folder-list" id="folderList"></div>
@@ -403,16 +409,48 @@
       <div class="listwrap" id="callList"></div>
     </main>
 
-    <!-- Backdrop + Drawer -->
+    <!-- Backdrop shared by drawer + modal -->
     <div class="backdrop" id="backdrop" aria-hidden="true"></div>
 
+    <!-- Folder Modal (real form) -->
+    <div class="modal" id="folderModal" aria-hidden="true">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <div class="modal-title" id="folderModalTitle">New Folder</div>
+            <div class="modal-subtitle" id="folderModalSubtitle">Create a department like Grain, Irrigation, etc.</div>
+          </div>
+          <button class="btn ghost" id="btnCloseFolderModal">Close</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="field">
+            <label for="fm_name">Folder Name *</label>
+            <input id="fm_name" autocomplete="off" placeholder="Grain" />
+          </div>
+          <div class="helper" id="folderModalHelper">
+            Tip: Keep folder names short and consistent. Example: Grain, Irrigation, Service.
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <div class="left">
+            <button class="btn danger" id="btnDeleteFolder" style="display:none;">Delete Folder</button>
+          </div>
+          <div class="right" style="display:flex; gap:10px;">
+            <button class="btn" id="btnCancelFolderModal">Cancel</button>
+            <button class="btn primary" id="btnSaveFolderModal">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Call Drawer -->
     <section class="drawer" id="drawer" aria-hidden="true">
       <div class="drawer-header">
         <div>
           <div class="drawer-title" id="drawerTitle">New Service Call</div>
-          <div class="drawer-subtitle" id="drawerSubtitle">
-            Fill this out fast. Folder auto-selects from the left sidebar.
-          </div>
+          <div class="drawer-subtitle" id="drawerSubtitle">Folder auto-selects from the left sidebar.</div>
         </div>
         <button class="btn ghost" id="btnCloseDrawer">Close</button>
       </div>
@@ -497,12 +535,10 @@
   <script>
     /*****************************************************************
      * Work Force (PC-first)
-     * - Custom folders
-     * - Real form drawer for New/Edit
-     * - New call auto goes into ACTIVE folder
-     * - Completing moves to Completed folder
+     * - Real folder modal (create/rename/delete)
+     * - Real service call drawer (new/edit)
      *****************************************************************/
-    const STORAGE_KEY = "workforce_v2";
+    const STORAGE_KEY = "workforce_v3";
 
     const DEFAULT_STATE = {
       folders: [
@@ -512,7 +548,7 @@
       ],
       activeFolderId: "f_grain",
       calls: []
-      // call shape:
+      // call:
       // { id, folderId, customer, phone, tech, location, details, priority, status, scheduledAt, createdAt, updatedAt }
     };
 
@@ -520,8 +556,14 @@
 
     let state = loadState();
     let searchText = "";
+
+    // Drawer state
     let drawerMode = "new"; // "new" | "edit"
     let editingCallId = null;
+
+    // Folder modal state
+    let folderModalMode = "new"; // "new" | "rename"
+    let editingFolderId = null;
 
     function uid(prefix="id") {
       return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now()}`;
@@ -576,10 +618,7 @@
     }
 
     function normalizePhone(phone){
-      // Keep digits and +; make tel: work reliably
-      const p = String(phone || "").trim();
-      const cleaned = p.replace(/[^0-9+]/g, "");
-      return cleaned;
+      return String(phone || "").trim().replace(/[^0-9+]/g, "");
     }
 
     function priorityPill(priority){
@@ -595,14 +634,28 @@
 
     function fmtWhen(ts){
       if(!ts) return "";
-      try{
-        const d = new Date(ts);
-        if(Number.isNaN(d.getTime())) return "";
-        return d.toLocaleString();
-      }catch{ return ""; }
+      const d = new Date(ts);
+      if(Number.isNaN(d.getTime())) return "";
+      return d.toLocaleString();
     }
 
-    /** ---------------- RENDER ---------------- */
+    /** ---------------- Overlay control ---------------- */
+    function anyOverlayOpen(){
+      return $("drawer").classList.contains("show") || $("folderModal").classList.contains("show");
+    }
+
+    function showBackdrop(){
+      $("backdrop").classList.add("show");
+      $("backdrop").setAttribute("aria-hidden", "false");
+    }
+    function hideBackdropIfNone(){
+      if(!anyOverlayOpen()){
+        $("backdrop").classList.remove("show");
+        $("backdrop").setAttribute("aria-hidden", "true");
+      }
+    }
+
+    /** ---------------- Render ---------------- */
     function render(){
       renderFolders();
       renderCalls();
@@ -617,26 +670,32 @@
         row.className = "folder" + (folder.id === state.activeFolderId ? " active" : "");
         row.dataset.id = folder.id;
 
+        const menuDisabled = !!folder.locked;
+
         row.innerHTML = `
           <div class="left">
             <div class="name">${escapeHtml(folder.name)}</div>
             <div class="count">${folderCallCount(folder.id)} calls</div>
           </div>
-          <div class="menu">${folder.locked ? "" : "⋯"}</div>
+          <button class="iconbtn" ${menuDisabled ? "disabled" : ""} title="Folder options">⋯</button>
         `;
 
+        // click folder selects it
         row.addEventListener("click", () => {
           state.activeFolderId = folder.id;
           saveState();
           render();
+          // if drawer open and in "new", keep folder label correct
+          if($("drawer").classList.contains("show") && drawerMode === "new") setDrawerHeader();
         });
 
-        if (!folder.locked) {
-          row.addEventListener("contextmenu", (e) => {
-            e.preventDefault();
-            folderContextMenu(folder.id);
-          });
-        }
+        // menu button opens folder modal (rename/delete)
+        const menuBtn = row.querySelector(".iconbtn");
+        menuBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if(folder.locked) return;
+          openFolderModalRename(folder.id);
+        });
 
         list.appendChild(row);
       });
@@ -710,94 +769,139 @@
       });
     }
 
-    /** ---------------- FOLDERS ---------------- */
-    function addFolder(){
-      const name = prompt("Folder name? (Example: Grain, Irrigation)");
-      if(!name) return;
-      const clean = name.trim();
-      if(!clean) return;
+    /** ---------------- Folder Modal (real form) ---------------- */
+    function showFolderModal(){
+      $("folderModal").classList.add("show");
+      $("folderModal").setAttribute("aria-hidden", "false");
+      showBackdrop();
+      setTimeout(() => $("fm_name").focus(), 0);
+    }
 
-      if(state.folders.some(f => f.name.toLowerCase() === clean.toLowerCase())){
+    function hideFolderModal(){
+      $("folderModal").classList.remove("show");
+      $("folderModal").setAttribute("aria-hidden", "true");
+      folderModalMode = "new";
+      editingFolderId = null;
+      $("fm_name").value = "";
+      $("btnDeleteFolder").style.display = "none";
+      hideBackdropIfNone();
+    }
+
+    function openFolderModalNew(){
+      folderModalMode = "new";
+      editingFolderId = null;
+
+      $("folderModalTitle").textContent = "New Folder";
+      $("folderModalSubtitle").textContent = "Create a department like Grain, Irrigation, etc.";
+      $("folderModalHelper").textContent = "Tip: Keep folder names short and consistent.";
+      $("fm_name").value = "";
+      $("btnDeleteFolder").style.display = "none";
+
+      showFolderModal();
+    }
+
+    function openFolderModalRename(folderId){
+      const folder = getFolder(folderId);
+      if(!folder || folder.locked) return;
+
+      folderModalMode = "rename";
+      editingFolderId = folderId;
+
+      $("folderModalTitle").textContent = "Folder Options";
+      $("folderModalSubtitle").textContent = "Rename the folder, or delete it (calls will move to Completed).";
+      $("folderModalHelper").textContent = `Current folder: ${folder.name}`;
+      $("fm_name").value = folder.name;
+      $("btnDeleteFolder").style.display = "inline-flex";
+
+      showFolderModal();
+    }
+
+    function saveFolderFromModal(){
+      const name = $("fm_name").value.trim();
+      if(!name){
+        alert("Folder name is required.");
+        $("fm_name").focus();
+        return;
+      }
+
+      // prevent duplicate names (case-insensitive)
+      const dup = state.folders.some(f =>
+        f.name.toLowerCase() === name.toLowerCase() &&
+        (folderModalMode !== "rename" || f.id !== editingFolderId)
+      );
+      if(dup){
         alert("That folder name already exists.");
+        $("fm_name").focus();
         return;
       }
 
-      const id = uid("f");
-      const completed = state.folders.find(f => f.id === "f_completed");
-      state.folders = state.folders.filter(f => f.id !== "f_completed");
-      state.folders.push({ id, name: clean });
-      state.folders.push(completed);
+      if(folderModalMode === "new"){
+        const id = uid("f");
+        const completed = state.folders.find(f => f.id === "f_completed");
+        state.folders = state.folders.filter(f => f.id !== "f_completed");
+        state.folders.push({ id, name });
+        state.folders.push(completed);
 
-      state.activeFolderId = id;
-      saveState();
-      render();
-    }
-
-    function renameFolder(folderId){
-      const folder = getFolder(folderId);
-      if(!folder || folder.locked) return;
-
-      const name = prompt("Rename folder:", folder.name);
-      if(!name) return;
-      const clean = name.trim();
-      if(!clean) return;
-
-      if(state.folders.some(f => f.id !== folderId && f.name.toLowerCase() === clean.toLowerCase())){
-        alert("Another folder already has that name.");
+        state.activeFolderId = id;
+        saveState();
+        render();
+        hideFolderModal();
         return;
       }
 
-      folder.name = clean;
-      saveState();
-      render();
-    }
-
-    function deleteFolder(folderId){
-      const folder = getFolder(folderId);
+      // rename
+      const folder = getFolder(editingFolderId);
       if(!folder || folder.locked) return;
 
-      const count = folderCallCount(folderId);
-      const ok = confirm(`Delete folder "${folder.name}"?\n\n${count} calls will be moved to Completed.`);
+      folder.name = name;
+      saveState();
+      render();
+      hideFolderModal();
+
+      // keep drawer folder label accurate if drawer is open
+      if($("drawer").classList.contains("show") && drawerMode === "new") setDrawerHeader();
+    }
+
+    function deleteFolderFromModal(){
+      const folder = getFolder(editingFolderId);
+      if(!folder || folder.locked) return;
+
+      const count = folderCallCount(folder.id);
+      const ok = confirm(`Delete "${folder.name}"?\n\n${count} calls will be moved to Completed.`);
       if(!ok) return;
 
+      // move calls
       state.calls.forEach(c => {
-        if(c.folderId === folderId) c.folderId = "f_completed";
+        if(c.folderId === folder.id) c.folderId = "f_completed";
       });
 
-      state.folders = state.folders.filter(f => f.id !== folderId);
+      // remove folder
+      state.folders = state.folders.filter(f => f.id !== folder.id);
 
-      if(state.activeFolderId === folderId) state.activeFolderId = "f_completed";
+      // fix active folder
+      if(state.activeFolderId === folder.id) state.activeFolderId = "f_completed";
 
       saveState();
       render();
+      hideFolderModal();
+
+      if($("drawer").classList.contains("show") && drawerMode === "new") setDrawerHeader();
     }
 
-    function folderContextMenu(folderId){
-      const choice = prompt("Folder options:\n1 = Rename\n2 = Delete\n(Cancel to exit)");
-      if(choice === "1") renameFolder(folderId);
-      if(choice === "2") deleteFolder(folderId);
-    }
-
-    /** ---------------- DRAWER (REAL FORM) ---------------- */
+    /** ---------------- Drawer (service calls) ---------------- */
     function showDrawer(){
       $("drawer").classList.add("show");
-      $("backdrop").classList.add("show");
       $("drawer").setAttribute("aria-hidden", "false");
-      $("backdrop").setAttribute("aria-hidden", "false");
+      showBackdrop();
     }
 
     function hideDrawer(){
       $("drawer").classList.remove("show");
-      $("backdrop").classList.remove("show");
       $("drawer").setAttribute("aria-hidden", "true");
-      $("backdrop").setAttribute("aria-hidden", "true");
       editingCallId = null;
       drawerMode = "new";
-      setDeleteVisible(false);
-    }
-
-    function setDeleteVisible(show){
-      $("btnDeleteCall").style.display = show ? "inline-flex" : "none";
+      $("btnDeleteCall").style.display = "none";
+      hideBackdropIfNone();
     }
 
     function setDrawerHeader(){
@@ -830,7 +934,6 @@
     }
 
     function getTargetFolderIdForNew(){
-      // Don’t create new calls directly inside Completed
       if(state.activeFolderId === "f_completed"){
         return state.folders.find(f => f.id !== "f_completed")?.id || "f_completed";
       }
@@ -838,50 +941,14 @@
     }
 
     function openNewDrawer(){
+      // close folder modal if open
+      if($("folderModal").classList.contains("show")) hideFolderModal();
+
       drawerMode = "new";
       editingCallId = null;
-      setDeleteVisible(false);
+      $("btnDeleteCall").style.display = "none";
       resetForm();
       setDrawerHeader();
-      showDrawer();
-      focusFirstField();
-    }
-
-    function openEditDrawer(callId){
-      const call = state.calls.find(c => c.id === callId);
-      if(!call) return;
-
-      drawerMode = "edit";
-      editingCallId = callId;
-      setDeleteVisible(true);
-
-      // Set folder display to the call’s current folder
-      const folder = getFolder(call.folderId);
-      $("f_folder").value = folder ? folder.name : "";
-
-      $("drawerTitle").textContent = "Edit Service Call";
-      $("drawerSubtitle").textContent = `Editing call in "${folder ? folder.name : "Folder"}".`;
-
-      $("f_customer").value = call.customer || "";
-      $("f_phone").value = call.phone || "";
-      $("f_tech").value = call.tech || "";
-      $("f_location").value = call.location || "";
-      $("f_details").value = call.details || "";
-      $("f_priority").value = call.priority || "Medium";
-      $("f_status").value = call.status || "New";
-
-      // scheduledAt -> datetime-local format
-      if(call.scheduledAt){
-        const d = new Date(call.scheduledAt);
-        if(!Number.isNaN(d.getTime())){
-          $("f_scheduled").value = toDatetimeLocal(d);
-        }else{
-          $("f_scheduled").value = "";
-        }
-      }else{
-        $("f_scheduled").value = "";
-      }
-
       showDrawer();
       focusFirstField();
     }
@@ -902,6 +969,42 @@
       const d = new Date(v);
       if(Number.isNaN(d.getTime())) return null;
       return d.getTime();
+    }
+
+    function openEditDrawer(callId){
+      // close folder modal if open
+      if($("folderModal").classList.contains("show")) hideFolderModal();
+
+      const call = state.calls.find(c => c.id === callId);
+      if(!call) return;
+
+      drawerMode = "edit";
+      editingCallId = callId;
+      $("btnDeleteCall").style.display = "inline-flex";
+
+      const folder = getFolder(call.folderId);
+      $("f_folder").value = folder ? folder.name : "";
+
+      $("drawerTitle").textContent = "Edit Service Call";
+      $("drawerSubtitle").textContent = `Editing call in "${folder ? folder.name : "Folder"}".`;
+
+      $("f_customer").value = call.customer || "";
+      $("f_phone").value = call.phone || "";
+      $("f_tech").value = call.tech || "";
+      $("f_location").value = call.location || "";
+      $("f_details").value = call.details || "";
+      $("f_priority").value = call.priority || "Medium";
+      $("f_status").value = call.status || "New";
+
+      if(call.scheduledAt){
+        const d = new Date(call.scheduledAt);
+        $("f_scheduled").value = Number.isNaN(d.getTime()) ? "" : toDatetimeLocal(d);
+      }else{
+        $("f_scheduled").value = "";
+      }
+
+      showDrawer();
+      focusFirstField();
     }
 
     function saveFromForm(){
@@ -927,38 +1030,23 @@
 
       if(drawerMode === "new"){
         const folderId = getTargetFolderIdForNew();
+        const call = { id: uid("c"), folderId, ...payload, createdAt: now };
 
-        const call = {
-          id: uid("c"),
-          folderId,
-          ...payload,
-          createdAt: now
-        };
-
-        // If user sets status to Completed while creating, move to completed automatically
-        if(call.status === "Completed"){
-          call.folderId = "f_completed";
-        }
+        if(call.status === "Completed") call.folderId = "f_completed";
 
         state.calls.unshift(call);
         saveState();
         render();
-
         hideDrawer();
       }else{
         const call = state.calls.find(c => c.id === editingCallId);
         if(!call) return;
 
-        // Keep folderId unless status becomes Completed
         Object.assign(call, payload);
-
-        if(call.status === "Completed"){
-          call.folderId = "f_completed";
-        }
+        if(call.status === "Completed") call.folderId = "f_completed";
 
         saveState();
         render();
-
         hideDrawer();
       }
     }
@@ -977,7 +1065,6 @@
       hideDrawer();
     }
 
-    /** ---------------- CALLS ---------------- */
     function completeCall(callId){
       const call = state.calls.find(c => c.id === callId);
       if(!call) return;
@@ -993,8 +1080,12 @@
       render();
     }
 
-    /** ---------------- WIRE UP ---------------- */
-    $("btnNewFolder").addEventListener("click", addFolder);
+    /** ---------------- Wiring ---------------- */
+    $("btnNewFolder").addEventListener("click", () => {
+      // close drawer if open? (optional). We'll leave drawer open; modal sits over it.
+      openFolderModalNew();
+    });
+
     $("btnNewCall").addEventListener("click", openNewDrawer);
 
     $("searchBox").addEventListener("input", (e) => {
@@ -1002,39 +1093,48 @@
       renderCalls();
     });
 
+    // Backdrop: close topmost overlay
+    $("backdrop").addEventListener("click", () => {
+      // prefer closing modal first
+      if($("folderModal").classList.contains("show")) { hideFolderModal(); return; }
+      if($("drawer").classList.contains("show")) { hideDrawer(); return; }
+    });
+
+    // Folder modal buttons
+    $("btnCloseFolderModal").addEventListener("click", hideFolderModal);
+    $("btnCancelFolderModal").addEventListener("click", hideFolderModal);
+    $("btnSaveFolderModal").addEventListener("click", saveFolderFromModal);
+    $("btnDeleteFolder").addEventListener("click", deleteFolderFromModal);
+
+    // Drawer buttons
     $("btnCloseDrawer").addEventListener("click", hideDrawer);
     $("btnCancel").addEventListener("click", hideDrawer);
     $("btnSave").addEventListener("click", saveFromForm);
     $("btnDeleteCall").addEventListener("click", deleteCurrentCall);
-    $("backdrop").addEventListener("click", hideDrawer);
 
     // Keyboard shortcuts
     window.addEventListener("keydown", (e) => {
       const isTyping = e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT");
       const drawerOpen = $("drawer").classList.contains("show");
+      const modalOpen = $("folderModal").classList.contains("show");
 
-      // Ctrl+Enter save (when drawer open)
-      if(drawerOpen && e.ctrlKey && e.key === "Enter"){
-        e.preventDefault();
-        saveFromForm();
-        return;
+      // Ctrl+Enter save (drawer or folder modal)
+      if(e.ctrlKey && e.key === "Enter"){
+        if(modalOpen){ e.preventDefault(); saveFolderFromModal(); return; }
+        if(drawerOpen){ e.preventDefault(); saveFromForm(); return; }
       }
 
       if(e.key === "Escape"){
-        if(drawerOpen){
-          e.preventDefault();
-          hideDrawer();
-          return;
-        }
-        // If not in drawer, clear search
-        if(!drawerOpen){
-          $("searchBox").value = "";
-          searchText = "";
-          renderCalls();
-        }
+        if(modalOpen){ e.preventDefault(); hideFolderModal(); return; }
+        if(drawerOpen){ e.preventDefault(); hideDrawer(); return; }
+
+        // clear search
+        $("searchBox").value = "";
+        searchText = "";
+        renderCalls();
       }
 
-      if(!drawerOpen && !isTyping){
+      if(!drawerOpen && !modalOpen && !isTyping){
         if(e.key.toLowerCase() === "n"){
           openNewDrawer();
         }
@@ -1045,15 +1145,13 @@
       }
     });
 
-    // When active folder changes, update drawer folder label if drawer is open and in "new"
-    const _origRenderFolders = renderFolders;
-    function renderFolders(){
-      _origRenderFolders();
-      const drawerOpen = $("drawer").classList.contains("show");
-      if(drawerOpen && drawerMode === "new"){
-        setDrawerHeader();
+    // Enter key in folder name field saves
+    $("fm_name").addEventListener("keydown", (e) => {
+      if(e.key === "Enter"){
+        e.preventDefault();
+        saveFolderFromModal();
       }
-    }
+    });
 
     // Initial render
     render();
